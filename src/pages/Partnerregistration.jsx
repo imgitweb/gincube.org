@@ -4,7 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Building, User, Mail, Phone, MapPin, Send, Globe, FileText, Image as ImageIcon, Briefcase } from 'lucide-react';
 import ReCAPTCHA from "react-google-recaptcha";
 import API_URL from "../components/Config"; // Load API URL from Config
-import locationData from '../data/locationData.json'; // Load local JSON data
+import locationData from '../data/locationdata.json'; // Load local JSON data
 
 gsap.registerPlugin(ScrollTrigger);
 

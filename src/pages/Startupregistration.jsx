@@ -3,7 +3,7 @@ import ReCAPTCHA from "react-google-recaptcha";
 import { User, Mail, Phone, Lock, Building, MapPin, Target, Send, Globe } from 'lucide-react';
 
 // Apna JSON data import karein
-import locationData from '../data/locationData.json'; 
+import locationData from '../data/locationdata.json'; 
 
 export default function StartupRegistration() {
     const [formData, setFormData] = useState({
