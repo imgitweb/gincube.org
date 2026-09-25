@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme {
+  /* Sastik LIGHT theme exact colors */
+  --color-sastik-bg: #FFFFFF;
+  --color-sastik-card: #FFFFFF;
+  --color-sastik-primary: #5C3CFF; /* Sastik Vibrant Purple */
+  --color-sastik-textMain: #0A1128; /* Dark Navy for Headings */
+  --color-sastik-textMuted: #64748B; /* Gray for paragraphs */
+  
+  /* You can keep accents for floating icons */
+  --color-sastik-accent: #10B981; 
+
+  /* Custom Floating Animations */
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-float-slow: float 6s ease-in-out infinite;
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+}
+
+/* Base Styles setup */
+@layer base {
+  body {
+    background-color: var(--color-sastik-bg);
+    color: var(--color-sastik-textMain);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
