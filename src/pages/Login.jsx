@@ -13,7 +13,7 @@ export default function Login() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const Base_URL = "https://gincube.incubationmasters.com/";
+  const Base_URL = "https://gincube.incubationmasters.com/api";
 
   // Check if Firebase is already loaded
   const [firebaseLoaded, setFirebaseLoaded] = useState(false);
