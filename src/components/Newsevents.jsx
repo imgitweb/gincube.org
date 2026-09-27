@@ -273,20 +273,20 @@ const NewsEvents = () => {
             </button>
 
             {/* Media Section */}
-            <div className="w-full md:w-3/5 bg-black flex items-center justify-center relative border-b md:border-b-0 md:border-r border-[#1C5A8F] min-h-[300px]">
+            <div className="w-full md:w-3/5 bg-black flex items-center justify-center relative border-b md:border-b-0 md:border-r border-[#1C5A8F] min-h-[200px] md:min-h-[300px]">
               {selectedPost.media_type === 'VIDEO' ? (
                 <video 
                   src={selectedPost.media_url} 
                   controls 
                   autoPlay 
-                  className="max-w-full max-h-[60vh] md:max-h-[90vh] object-contain"
+                  className="max-w-full max-h-[45vh] md:max-h-[90vh] object-contain"
                   poster={selectedPost.thumbnail_url}
                 />
               ) : (
                 <img 
                   src={selectedPost.media_url} 
                   alt="Post Content" 
-                  className="max-w-full max-h-[60vh] md:max-h-[90vh] object-contain"
+                  className="max-w-full max-h-[45vh] md:max-h-[90vh] object-contain"
                 />
               )}
             </div>

@@ -506,16 +506,17 @@ const ContactPage = () => (
           <p style={{ margin: '0 auto 48px', maxWidth: 600, fontSize: 18, color: '#E2EEF8', lineHeight: 1.6, position: 'relative', zIndex: 2 }}>
             G.Incube is Gwalior's premier startup incubation center. Whether you have an idea, a question, or a vision — we're here for you.
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'center', position: 'relative', zIndex: 2 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center', position: 'relative', zIndex: 2 }}>
             <MotionLink 
               to="/startup-registration" 
-              whileHover={{ y: -4, boxShadow: '0 16px 40px rgba(234, 159, 36, 0.35)' }} 
-              whileTap={{ scale: 0.96 }}
-              style={{ display: 'inline-flex', alignItems: 'center', background: `linear-gradient(90deg, ${C.accent} 0%, ${C.accentDk} 100%)`, color: C.white, textDecoration: 'none', fontWeight: 800, fontSize: 18, padding: '18px 48px', borderRadius: 100, boxShadow: '0 8px 24px rgba(234, 159, 36, 0.25)', transition: 'all 0.3s' }}>
-              Apply for Incubation ↗
+              whileHover={{ y: -3, boxShadow: '0 16px 40px rgba(234, 159, 36, 0.4)' }} 
+              whileTap={{ scale: 0.97 }}
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(90deg, ${C.accent} 0%, ${C.accentDk} 100%)`, color: C.white, textDecoration: 'none', fontWeight: 800, fontSize: 'clamp(16px, 2vw, 18px)', padding: '16px clamp(28px, 5vw, 44px)', borderRadius: 100, boxShadow: '0 8px 24px rgba(234, 159, 36, 0.3)', transition: 'all 0.3s' }}>
+              <span>Apply for Incubation</span>
+              <span style={{ marginLeft: 6, fontSize: 18 }}>↗</span>
             </MotionLink>
-            <motion.a href="mailto:connect@gincube.org" whileHover={{ y: -4, background: 'rgba(255,255,255,0.1)' }} whileTap={{ scale: 0.96 }}
-              style={{ display: 'inline-flex', alignItems: 'center', background: 'transparent', border: `2px solid rgba(234, 159, 36, 0.5)`, color: C.white, textDecoration: 'none', fontWeight: 800, fontSize: 18, padding: '16px 48px', borderRadius: 100, transition: 'all 0.3s' }}>
+            <motion.a href="mailto:connect@gincube.org" whileHover={{ y: -3, background: 'rgba(255,255,255,0.1)' }} whileTap={{ scale: 0.97 }}
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: `2px solid rgba(234, 159, 36, 0.6)`, color: C.white, textDecoration: 'none', fontWeight: 800, fontSize: 'clamp(16px, 2vw, 18px)', padding: '16px clamp(28px, 5vw, 44px)', borderRadius: 100, transition: 'all 0.3s' }}>
               Email Us
             </motion.a>
           </div>

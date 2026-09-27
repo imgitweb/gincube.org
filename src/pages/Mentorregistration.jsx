@@ -233,26 +233,26 @@ export default function MentorRegistration() {
     <main ref={pageRef} className="flex-grow bg-[#F8FAFC] min-h-screen pt-20 pb-24 font-['Inter',sans-serif]">
       
       {/* ================= TOP BANNER (Dark Navy Theme with Yellow Glow) ================= */}
-      <div className="w-full bg-gradient-to-br from-[#0A2236] via-[#15436B] to-[#1C5A8F] py-24 relative overflow-hidden shadow-inner">
+      <div className="w-full bg-gradient-to-br from-[#0A2236] via-[#15436B] to-[#1C5A8F] pt-28 pb-20 sm:pt-32 sm:pb-24 relative overflow-hidden shadow-inner">
         <div className="absolute top-[-20%] left-[-10%] w-[40%] h-[60%] rounded-full bg-[#EA9F24]/20 blur-[120px] animate-pulse"></div>
         <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[60%] rounded-full bg-[#287BBE]/30 blur-[100px] animate-pulse" style={{ animationDelay: '1s' }}></div>
         
-        <div ref={bannerTextRef} className="relative z-10 text-center px-4 max-w-4xl mx-auto mt-10">
-          <div className="inline-block px-[18px] py-[8px] rounded-full bg-[#EA9F24]/10 border border-[#EA9F24]/30 text-[#EA9F24] font-bold text-sm mb-6 backdrop-blur-sm shadow-sm">
+        <div ref={bannerTextRef} className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+          <div className="inline-block px-4 py-1.5 rounded-full bg-[#EA9F24]/10 border border-[#EA9F24]/30 text-[#EA9F24] font-bold text-xs sm:text-sm mb-4 sm:mb-6 backdrop-blur-sm shadow-sm">
             Empower Innovators
           </div>
-          <h1 className="text-[2.5rem] md:text-[3.5rem] lg:text-[4.5rem] font-extrabold text-white tracking-tight mb-6 leading-tight">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-4 sm:mb-6 leading-tight">
             Mentor <span className="text-[#EA9F24]">Registration</span>
           </h1>
-          <p className="text-[#D0E2F2] text-[1.15rem] font-medium max-w-2xl mx-auto leading-relaxed">
+          <p className="text-[#D0E2F2] text-base sm:text-lg font-medium max-w-2xl mx-auto leading-relaxed">
             Share your expertise, guide startups toward success, and become a part of the G.Incube ecosystem.
           </p>
         </div>
       </div>
 
       {/* ================= FORM CONTAINER ================= */}
-      <div className="max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-20">
-        <div ref={formRef} className="bg-white shadow-[0_20px_60px_rgba(21,67,107,0.08)] rounded-[24px] p-[30px] md:p-[50px] border border-[#E2E8F0] border-t-[6px] border-t-[#EA9F24]">
+      <div className="max-w-[1000px] mx-auto px-4 sm:px-6 -mt-10 sm:-mt-12 relative z-20">
+        <div ref={formRef} className="bg-white shadow-[0_20px_60px_rgba(21,67,107,0.08)] rounded-3xl p-5 sm:p-8 md:p-12 border border-[#E2E8F0] border-t-[6px] border-t-[#EA9F24]">
           <form onSubmit={handleSubmit} noValidate>
             
             {/* Honeypot */}
@@ -440,10 +440,10 @@ export default function MentorRegistration() {
               <button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="inline-flex items-center justify-center px-[50px] py-[20px] bg-gradient-to-r from-[#EA9F24] to-[#D68A1B] hover:from-[#D68A1B] hover:to-[#B47012] text-white font-extrabold rounded-[50px] text-[1.1rem] shadow-[0_10px_30px_rgba(234,159,36,0.35)] transition-all disabled:opacity-70 disabled:cursor-not-allowed hover:-translate-y-1 w-full md:w-auto"
+                className="inline-flex items-center justify-center px-10 py-4 bg-gradient-to-r from-[#EA9F24] to-[#D68A1B] hover:from-[#D68A1B] hover:to-[#B47012] text-white font-extrabold rounded-full text-base sm:text-lg shadow-lg shadow-[#EA9F24]/30 hover:shadow-xl hover:shadow-[#EA9F24]/40 transition-all disabled:opacity-60 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0 w-full sm:w-auto cursor-pointer"
               >
                 {isSubmitting ? (
-                  <><span className="inline-block w-[20px] h-[20px] border-2 border-white/30 border-t-white rounded-full animate-spin mr-[10px] align-middle"></span> Processing...</>
+                  <><span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2.5"></span> Processing...</>
                 ) : (
                   <><Send className="w-5 h-5 mr-2" /> Register as Mentor</>
                 )}

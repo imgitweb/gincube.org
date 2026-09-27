@@ -1,8 +1,9 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import FeaturesTab from "./components/Featurestab";
+import Leadership from "./components/Leadership";
 import StatsAndCTA from "./components/Statsandcta";
 import WhoWeAre from "./components/Whoweare";
 import Services from "./components/Services";
@@ -17,6 +18,9 @@ import PartnerRegistration from "./pages/Partnerregistration";
 import Privacy from "./components/Privacy";
 import TermsAndConditions from "./components/Termsconditions";
 import NewsEvents from "./components/Newsevents"
+import Login from "./pages/Login";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // 👇 Import your Chatbot component here (adjust the path if needed)
 import Chatbot from "./components/Chatbot";
@@ -26,17 +30,21 @@ function Home() {
     <>
       <Hero />
       <FeaturesTab />
+      <Leadership />
       <StatsAndCTA />
     </>
   );
 }
 
 function App() {
-  return (
-    <div className="flex flex-col min-h-screen bg-sastik-dark text-sastik-textMain font-sans selection:bg-sastik-accent selection:text-white overflow-x-hidden">
-      <Navbar />
+  const location = useLocation();
+  const isLoginPage = location.pathname.toLowerCase() === "/login";
 
-      <ScrollToTop />
+  return (
+    <div className="flex flex-col min-h-screen bg-white text-[#334155] font-sans selection:bg-[#EA9F24] selection:text-white overflow-x-hidden">
+      {!isLoginPage && <Navbar />}
+
+      {!isLoginPage && <ScrollToTop />}
       
       <main className="flex-grow">
         <Routes>
@@ -52,14 +60,19 @@ function App() {
           <Route path="/privacy-policy" element={<Privacy />} />
           <Route path="/terms-conditions" element={<TermsAndConditions />} />
           <Route path="/news-event" element={<NewsEvents />} />
+          <Route path="/events" element={<NewsEvents />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </main>
 
-      {/* 👇 Chatbot yahan add kiya hai, ye fixed component ki tarah har page pe dikhega */}
-      <Chatbot />
+      {/* Toast Notification Container */}
+      <ToastContainer position="top-right" autoClose={3000} theme="colored" />
 
-      {/* Footer yahan har page ke end mein render hoga */}
-      <Footer />
+      {/* Floating Assistant Widget */}
+      {!isLoginPage && <Chatbot />}
+
+      {/* Footer */}
+      {!isLoginPage && <Footer />}
     </div>
   );
 }

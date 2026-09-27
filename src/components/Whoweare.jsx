@@ -324,25 +324,26 @@ const WhoWeAre = () => {
             animate={{ y: [0, -6, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             style={{
               background: 'rgba(255, 255, 255, 0.95)', border: `1px solid rgba(234, 159, 36, 0.4)`, borderRadius: 24,
-              padding: '16px 32px', display: 'inline-flex', alignItems: 'center', gap: 20,
+              padding: '12px clamp(14px, 4vw, 28px)', display: 'inline-flex', alignItems: 'center', gap: 16,
               backdropFilter: 'blur(16px)', boxShadow: `0 12px 40px rgba(0,0,0,0.25), 0 0 0 1px rgba(234, 159, 36, 0.15)`,
+              maxWidth: '92vw', boxSizing: 'border-box'
             }}
           >
-            <div style={{ background: C.white, borderRadius: 14, padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(21, 67, 107, 0.1)' }}>
-              <img src={logoImage} alt="Gwalior Smart City" style={{ height: 56, width: 'auto', display: 'block' }}
-                onError={e => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = `<span style="font-size:24px;font-weight:900;color:#15436B;">G</span>`; }} />
+            <div style={{ background: C.white, borderRadius: 12, padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(21, 67, 107, 0.1)', flexShrink: 0 }}>
+              <img src={logoImage} alt="Gwalior Smart City" style={{ height: 44, width: 'auto', display: 'block' }}
+                onError={e => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = `<span style="font-size:20px;font-weight:900;color:#15436B;">G</span>`; }} />
             </div>
-            <div style={{ width: 1, height: 56, background: `linear-gradient(180deg, transparent, ${C.pale}, transparent)` }} />
-            <div style={{ textAlign: 'left' }}>
-              <p style={{ margin: '0 0 4px', fontSize: 12, color: C.accent, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Under</p>
-              <p style={{ margin: 0, fontSize: 15, color: C.heading, fontWeight: 800, lineHeight: 1.4 }}>
+            <div style={{ width: 1, height: 44, background: `linear-gradient(180deg, transparent, ${C.pale}, transparent)`, flexShrink: 0 }} />
+            <div style={{ textAlign: 'left', minWidth: 0 }}>
+              <p style={{ margin: '0 0 2px', fontSize: 11, color: C.accent, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Under</p>
+              <p style={{ margin: 0, fontSize: 'clamp(13px, 2.5vw, 15px)', color: C.heading, fontWeight: 800, lineHeight: 1.3 }}>
                 Gwalior Smart City<br />
                 <span style={{ color: C.primary, fontWeight: 700 }}>Development Corporation</span>
               </p>
             </div>
             <motion.div
-              animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-              style={{ width: 12, height: 12, borderRadius: '50%', background: C.accent, flexShrink: 0, boxShadow: `0 0 0 4px rgba(234, 159, 36, 0.2)` }}
+              animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ width: 10, height: 10, borderRadius: '50%', background: C.accent, flexShrink: 0, boxShadow: `0 0 0 3px rgba(234, 159, 36, 0.2)` }}
             />
           </motion.div>
         </motion.div>
@@ -423,17 +424,18 @@ const WhoWeAre = () => {
             
             <MotionLink
               to="/startup-registration"
-              whileHover={{ y: -4, boxShadow: '0 16px 40px rgba(234, 159, 36, 0.35)' }}
-              whileTap={{ scale: 0.96 }}
+              whileHover={{ y: -3, boxShadow: '0 16px 40px rgba(234, 159, 36, 0.4)' }}
+              whileTap={{ scale: 0.97 }}
               style={{
-                position: 'relative', zIndex: 2, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                position: 'relative', zIndex: 2, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                 background: `linear-gradient(90deg, ${C.accent} 0%, ${C.accentDk} 100%)`, 
                 color: C.white, textDecoration: 'none', fontWeight: 800,
-                fontSize: 18, padding: '18px 48px', borderRadius: 100,
-                boxShadow: '0 8px 24px rgba(234, 159, 36, 0.25)', transition: 'all 0.3s ease'
+                fontSize: 'clamp(16px, 2vw, 18px)', padding: '16px clamp(28px, 5vw, 48px)', borderRadius: 100,
+                boxShadow: '0 8px 24px rgba(234, 159, 36, 0.3)', transition: 'all 0.3s ease'
               }}
             >
-              Start Your Journey Now
+              <span>Start Your Journey Now</span>
+              <span style={{ fontSize: 18, lineHeight: 1 }}>→</span>
             </MotionLink>
           </div>
         </Reveal>

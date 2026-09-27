@@ -1,0 +1,59 @@
+[
+  {
+    "id": "collector",
+    "roleCategory": "District Administration",
+    "name": "Smt. Ruchika Chauhan, IAS",
+    "designation": "District Collector & District Magistrate",
+    "organization": "District Administration Gwalior",
+    "image": "/src/assets/gincube_ruchika.jpeg",
+    "objectPosition": "center 15%",
+    "tag": "Collector",
+    "badgeColor": "#15436B",
+    "experience": "IAS Officer",
+    "responsibilities": [
+      "Executive oversight of district administration and governance across Gwalior.",
+      "Coordination of district-level development and public-service initiatives.",
+      "Supporting innovation, entrepreneurship, and development initiatives across the district."
+    ],
+    "bio": "Smt. Ruchika Chauhan, IAS, serves as the District Collector and District Magistrate of Gwalior, overseeing district administration, public services, development programs, and governance initiatives.",
+    "quote": "Strengthening governance and enabling inclusive development for a progressive Gwalior."
+  },
+  {
+    "id": "executive-director",
+    "roleCategory": "Smart City Leadership",
+    "name": "Abhishek Choudhary, IAS",
+    "designation": "Executive Director",
+    "organization": "Gwalior Smart City Development Corporation Limited (GSCDCL)",
+    "image": "/src/assets/2.png",
+    "objectPosition": "center 12%",
+    "tag": "Executive Director",
+    "badgeColor": "#EA9F24",
+    "experience": "Senior Administrative Leadership",
+    "responsibilities": [
+      "Overseeing the implementation of smart city and urban development initiatives.",
+      "Coordinating municipal development programs and civic infrastructure projects.",
+      "Supporting technology-driven governance, innovation, and citizen-focused development."
+    ],
+    "bio": "Abhishek Choudhary, IAS, provides executive leadership and administrative coordination for urban development and smart city initiatives in Gwalior.",
+    "quote": "Driving sustainable urban development through innovation, collaboration, and effective governance."
+  },
+  {
+    "id": "ceo",
+    "roleCategory": "Smart City Leadership",
+    "name": "T. Prateek Rao, IAS",
+    "designation": "Chief Executive Officer (CEO)",
+    "organization": "Gwalior Smart City Development Corporation Limited (GSCDCL)",
+    "image": "/src/assets/3.png",
+    "objectPosition": "center 18%",
+    "tag": "CEO",
+    "badgeColor": "#0A2236",
+    "experience": "IAS Officer",
+    "responsibilities": [
+      "Leading the execution of smart city initiatives and urban development programs.",
+      "Overseeing strategic and operational activities of Gwalior Smart City projects.",
+      "Supporting technology-driven urban transformation, innovation, and citizen-focused development."
+    ],
+    "bio": "T. Prateek Rao, IAS, provides executive leadership for smart city and urban development initiatives in Gwalior, supporting technology-driven transformation and effective implementation of development programs.",
+    "quote": "Building a smarter, more connected, and innovation-driven Gwalior."
+  }
+]

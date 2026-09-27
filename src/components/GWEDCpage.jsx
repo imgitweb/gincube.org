@@ -630,15 +630,16 @@ const GWEDCPage = () => (
           <p style={{ margin: '0 auto 48px', maxWidth: 640, fontSize: 20, color: C.text, lineHeight: 1.7, fontWeight: 500 }}>
             Yashashwani is more than a program — it's a movement. Join thousands of visionary women building a brighter, stronger tomorrow.
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'center' }}>
-            <motion.a href="#join" whileHover={{ y: -4, boxShadow: '0 20px 40px rgba(234, 159, 36, 0.3)' }} whileTap={{ scale: 0.96 }}
-              style={{ display: 'inline-flex', alignItems: 'center', background: `linear-gradient(90deg, ${C.accent} 0%, ${C.accentDk} 100%)`, color: C.white, textDecoration: 'none', fontWeight: 800, fontSize: 18, padding: '18px 48px', borderRadius: 100, transition: 'all 0.3s' }}>
-              Apply Now ↗
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center' }}>
+            <motion.a href="#join" whileHover={{ y: -3, boxShadow: '0 16px 36px rgba(234, 159, 36, 0.4)' }} whileTap={{ scale: 0.97 }}
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(90deg, ${C.accent} 0%, ${C.accentDk} 100%)`, color: C.white, textDecoration: 'none', fontWeight: 800, fontSize: 'clamp(16px, 2vw, 18px)', padding: '16px clamp(28px, 5vw, 44px)', borderRadius: 100, transition: 'all 0.3s' }}>
+              <span>Apply Now</span>
+              <span style={{ marginLeft: 6, fontSize: 18 }}>↗</span>
             </motion.a>
-            <motion.a href="/" whileHover={{ y: -4, background: C.lt, boxShadow: '0 12px 24px rgba(0,0,0,0.05)' }} whileTap={{ scale: 0.96 }}
-              style={{ display: 'inline-flex', alignItems: 'center', background: C.white, border: `2px solid ${C.pale}`, color: C.heading, textDecoration: 'none', fontWeight: 800, fontSize: 18, padding: '16px 48px', borderRadius: 100, transition: 'all 0.3s' }}>
+            <MotionLink to="/who-we-are" whileHover={{ y: -3, background: C.lt, boxShadow: '0 10px 20px rgba(0,0,0,0.05)' }} whileTap={{ scale: 0.97 }}
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: C.white, border: `2px solid ${C.pale}`, color: C.heading, textDecoration: 'none', fontWeight: 800, fontSize: 'clamp(16px, 2vw, 18px)', padding: '16px clamp(28px, 5vw, 44px)', borderRadius: 100, transition: 'all 0.3s' }}>
               Learn More
-            </motion.a>
+            </MotionLink>
           </div>
         </div>
       </Reveal>

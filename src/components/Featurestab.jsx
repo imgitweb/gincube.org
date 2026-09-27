@@ -414,11 +414,11 @@ const FeaturesTab = () => {
           </motion.div>
 
           {/* ── Right: Mock UI window ──────────────────────── */}
-          <motion.div variants={itemVariants} className="w-full lg:w-7/12">
-            <div className="relative w-full aspect-[4/3] md:aspect-video rounded-3xl overflow-hidden bg-white border border-[#E2E8F0] shadow-2xl shadow-[#15436B]/10">
+          <motion.div variants={itemVariants} className="w-full lg:w-7/12 flex flex-col">
+            <div className="relative w-full min-h-[380px] sm:min-h-[420px] lg:h-[480px] rounded-3xl overflow-hidden bg-white border border-[#E2E8F0] shadow-2xl shadow-[#15436B]/10 flex flex-col">
 
               {/* Browser chrome */}
-              <div className="absolute top-0 left-0 w-full h-11 bg-[#F8FAFC] border-b border-[#E2E8F0] flex items-center px-4 gap-3 z-10">
+              <div className="w-full h-11 bg-[#F8FAFC] border-b border-[#E2E8F0] flex items-center px-4 gap-3 z-10 flex-shrink-0">
                 <div className="flex gap-1.5">
                   <div className="w-3 h-3 rounded-full bg-red-400" />
                   <div className="w-3 h-3 rounded-full bg-yellow-400" />
@@ -430,12 +430,12 @@ const FeaturesTab = () => {
                   animate={{ opacity: 1 }}
                   className="flex-1 bg-[#E2E8F0]/50 rounded-md h-5 flex items-center px-3"
                 >
-                  <p className="text-[#64748B] text-[10px] font-medium truncate">gincube.in / {features[activeTab].tag.toLowerCase().replace(' ', '-')}</p>
+                  <p className="text-[#64748B] text-[10px] font-medium truncate">gincube.org / {features[activeTab].tag.toLowerCase().replace(' ', '-')}</p>
                 </motion.div>
               </div>
 
               {/* Content area */}
-              <div className="w-full h-full pt-11 relative">
+              <div className="w-full flex-grow relative overflow-hidden">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}

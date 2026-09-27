@@ -1,17 +1,36 @@
 @import "tailwindcss";
 
 @theme {
-  /* Sastik LIGHT theme exact colors */
+  /* Gincube Official Brand Palette */
+  --color-brand-navy: #15436B;
+  --color-brand-navy-dark: #0A2236;
+  --color-brand-navy-mid: #1C5A8F;
+  --color-brand-navy-light: #287BBE;
+  --color-brand-navy-pale: #F0F6FB;
+
+  --color-brand-gold: #EA9F24;
+  --color-brand-gold-dark: #D68A1B;
+  --color-brand-gold-light: #F3C57B;
+  --color-brand-gold-pale: #FEF3C7;
+
+  --color-surface-bg: #F8FAFC;
+  --color-surface-card: #FFFFFF;
+  --color-surface-border: #E2E8F0;
+
+  --color-text-heading: #0A2236;
+  --color-text-body: #334155;
+  --color-text-muted: #64748B;
+
+  /* Legacy aliases for backwards compatibility */
   --color-sastik-bg: #FFFFFF;
   --color-sastik-card: #FFFFFF;
-  --color-sastik-primary: #5C3CFF; /* Sastik Vibrant Purple */
-  --color-sastik-textMain: #0A1128; /* Dark Navy for Headings */
-  --color-sastik-textMuted: #64748B; /* Gray for paragraphs */
-  
-  /* You can keep accents for floating icons */
-  --color-sastik-accent: #10B981; 
+  --color-sastik-primary: #15436B;
+  --color-sastik-dark: #0A2236;
+  --color-sastik-textMain: #0A2236;
+  --color-sastik-textMuted: #64748B;
+  --color-sastik-accent: #EA9F24;
 
-  /* Custom Floating Animations */
+  /* Floating animation */
   --animate-float: float 4s ease-in-out infinite;
   --animate-float-slow: float 6s ease-in-out infinite;
 
@@ -20,17 +39,124 @@
       transform: translateY(0);
     }
     50% {
-      transform: translateY(-20px);
+      transform: translateY(-16px);
     }
   }
 }
 
-/* Base Styles setup */
+/* Base styles */
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    text-size-adjust: 100%;
+  }
+
   body {
-    background-color: var(--color-sastik-bg);
-    color: var(--color-sastik-textMain);
+    background-color: #FFFFFF;
+    color: var(--color-text-body, #334155);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
+
+  ::selection {
+    background-color: #EA9F24;
+    color: #FFFFFF;
+  }
+}
+
+/* Custom Scrollbar for modern look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Standardized Button & Component Utility Classes */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #EA9F24 0%, #D68A1B 100%);
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 9999px;
+  padding: 0.75rem 1.75rem;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 14px rgba(234, 159, 36, 0.35);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(234, 159, 36, 0.45);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #FFFFFF;
+  color: #0A2236;
+  font-weight: 700;
+  border-radius: 9999px;
+  padding: 0.75rem 1.75rem;
+  font-size: 0.95rem;
+  border: 1.5px solid #E2E8F0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-secondary:hover {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  transform: translateY(-2px);
+}
+
+.btn-navy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #15436B;
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 9999px;
+  padding: 0.75rem 1.75rem;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 14px rgba(21, 67, 107, 0.25);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-navy:hover {
+  background: #0A2236;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(21, 67, 107, 0.35);
 }

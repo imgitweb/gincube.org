@@ -290,7 +290,7 @@ const SectionCard = ({ s, index }) => (
 /* ══════════════ MAIN COMPONENT ══════════════ */
 const PrivacyPolicy = () => (
   <section style={{
-    fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
     color: C.heading,
     overflow: 'hidden',
     background: '#F8FAFC',
@@ -300,7 +300,7 @@ const PrivacyPolicy = () => (
     <div style={{
       position: 'relative',
       background: C.dark,
-      padding: '72px 32px 80px',
+      padding: 'clamp(100px, 14vw, 130px) 24px clamp(60px, 8vw, 80px)',
       overflow: 'hidden',
       textAlign: 'center',
     }}>

@@ -321,7 +321,7 @@ const ServicesPage = () => {
         
         {/* CARDS GRID */}
         <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 32,
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 28,
           maxWidth: 1200, margin: '0 auto', marginTop: '-80px', position: 'relative', zIndex: 3
         }}>
           {SERVICES.map((service, i) => (
@@ -331,7 +331,7 @@ const ServicesPage = () => {
 
         {/* STATS ROW */}
         <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24,
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20,
           maxWidth: 1200, margin: '80px auto 0',
         }}>
           {[
@@ -348,7 +348,7 @@ const ServicesPage = () => {
         <Reveal delay={0.15} style={{ maxWidth: 1000, margin: '100px auto 0' }}>
           <div style={{
             background: `linear-gradient(135deg, ${C.dark} 0%, ${C.primary} 100%)`,
-            borderRadius: 36, padding: 'clamp(56px, 8vw, 88px) clamp(32px, 6vw, 64px)',
+            borderRadius: 36, padding: 'clamp(56px, 8vw, 88px) clamp(24px, 6vw, 64px)',
             textAlign: 'center', position: 'relative', overflow: 'hidden',
             boxShadow: '0 24px 48px rgba(10, 34, 54, 0.2)',
           }}>
@@ -375,17 +375,18 @@ const ServicesPage = () => {
 
             <MotionLink
               to="/startup-registration"
-              whileHover={{ y: -4, boxShadow: '0 16px 40px rgba(234, 159, 36, 0.35)' }}
-              whileTap={{ scale: 0.96 }}
+              whileHover={{ y: -3, boxShadow: '0 16px 40px rgba(234, 159, 36, 0.4)' }}
+              whileTap={{ scale: 0.97 }}
               style={{
-                position: 'relative', zIndex: 2, display: 'inline-flex', alignItems: 'center',
+                position: 'relative', zIndex: 2, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 background: `linear-gradient(90deg, ${C.accent} 0%, ${C.accentDk} 100%)`, 
                 color: C.white, textDecoration: 'none',
-                fontWeight: 800, fontSize: 18, padding: '18px 48px', borderRadius: 100,
-                boxShadow: `0 8px 24px rgba(234, 159, 36, 0.25)`, transition: 'all 0.3s'
+                fontWeight: 800, fontSize: 'clamp(16px, 2vw, 18px)', padding: '16px clamp(28px, 5vw, 48px)', borderRadius: 100,
+                boxShadow: `0 8px 24px rgba(234, 159, 36, 0.3)`, transition: 'all 0.3s'
               }}
             >
-              Apply for Incubation ↗
+              <span>Apply for Incubation</span>
+              <span style={{ fontSize: 18 }}>↗</span>
             </MotionLink>
           </div>
         </Reveal>

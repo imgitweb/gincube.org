@@ -235,12 +235,12 @@ const SectionCard = ({ s, index }) => {
 /* ══════════════ MAIN COMPONENT ══════════════ */
 const TermsAndConditions = () => (
   <section style={{
-    fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
     color: C.heading, overflow: 'hidden', background: '#F8FAFC',
   }}>
 
     {/* ── HERO ── */}
-    <div style={{ position: 'relative', background: C.dark, padding: '72px 32px 80px', overflow: 'hidden', textAlign: 'center' }}>
+    <div style={{ position: 'relative', background: C.dark, padding: 'clamp(100px, 14vw, 130px) 24px clamp(60px, 8vw, 80px)', overflow: 'hidden', textAlign: 'center' }}>
       {/* ambient orbs */}
       <motion.div
         animate={{ x: [0, 20, -10, 0], y: [0, -16, 14, 0] }}

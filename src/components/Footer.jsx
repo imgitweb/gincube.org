@@ -360,22 +360,22 @@ const Footer = () => {
               {/* Socials */}
               <motion.div
                 variants={itemAnim}
-                style={{ display: "flex", gap: 16, marginTop: 8 }}
+                style={{ display: "flex", gap: 14, marginTop: 8 }}
               >
                 <SocialIcon
-                  href="#"
+                  href="https://www.facebook.com/gincube"
                   path="M12 2.04c-5.5 0-10 4.48-10 10.02 0 5 3.66 9.15 8.44 9.9v-7H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.89 3.78-3.89 1.09 0 2.23.19 2.23.19v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 0 0 8.44-9.9c0-5.54-4.5-10.02-10-10.02z"
                 />
                 <SocialIcon
-                  href="#"
+                  href="https://x.com/gincube"
                   path="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
                 />
                 <SocialIcon
-                  href="#"
+                  href="https://www.linkedin.com/company/gincube/"
                   path="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.95v5.66H9.34V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM3.56 20.45h3.56V9H3.56v11.45z"
                 />
                 <SocialIcon
-                  href="#"
+                  href="https://www.instagram.com/gincube_gwalior/"
                   path="M12 2.16c3.2 0 3.58.01 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-3.26-.15-4.77-1.69-4.92-4.92-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85c.15-3.23 1.66-4.77 4.92-4.92 1.27-.06 1.64-.07 4.85-.07zm0-2.16C8.74 0 8.33.01 7.05.07 2.76.27.27 2.76.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.2 4.29 2.69 6.78 6.98 6.98 1.28.06 1.69.07 4.95.07s3.67-.01 4.95-.07c4.29-.2 6.78-2.69 6.98-6.98 .06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.2-4.29-2.69-6.78-6.98-6.98C15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 1 0 18.16 12 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 16 12a4 4 0 0 1-4 4zm5.8-9.66a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0z"
                 />
               </motion.div>
@@ -397,7 +397,8 @@ const Footer = () => {
               <div style={{ display: "flex", flexDirection: "column" }}>
                 <FooterLink to="/">Home</FooterLink>
                 <FooterLink to="/who-we-are">Who We Are</FooterLink>
-                <FooterLink to="/events">Events & Hackathons</FooterLink>
+                <FooterLink to="/Services">Our Services</FooterLink>
+                <FooterLink to="/news-event">Events & Updates</FooterLink>
                 <FooterLink to="/GWEDC">GWEDC (Women Cell)</FooterLink>
                 <FooterLink to="/contact-us">Contact Us</FooterLink>
               </div>
@@ -420,11 +421,14 @@ const Footer = () => {
                 <FooterLink to="/startup-registration">
                   Startup Registration
                 </FooterLink>
+                <FooterLink to="/mentor-registration">
+                  Mentor Registration
+                </FooterLink>
+                <FooterLink to="/investor-registration">
+                  Investor Registration
+                </FooterLink>
                 <FooterLink to="/partner-registration">
                   Partner Registration
-                </FooterLink>
-                <FooterLink to="/hackathon-registration">
-                  Hackathon Registration
                 </FooterLink>
               </div>
             </div>

@@ -2,11 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import {
   motion,
   AnimatePresence,
-  useScroll,
-  useMotionValueEvent,
 } from "framer-motion";
-import { Menu, X, ChevronDown, ExternalLink, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Menu, X, ChevronDown, ExternalLink, Search } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 // ─── IMAGES IMPORT ───
 import logoImage from "../assets/logo.png"; 
@@ -29,7 +27,6 @@ const C = {
 const FORM_URL =
   "https://docs.google.com/forms/d/e/1FAIpQLScM22JOUwc3dqTS1sjy5c8YwF27xSfSx-hymm6bWvnwaJCUag/viewform";
 
-/* YAHAN ROUTES FIX KIYE HAIN APP.JS KE HISAB SE */
 const navLinks = [
   { name: "Home", to: "/" },
   {
@@ -66,83 +63,47 @@ const navLinks = [
   { name: "Contact Us", to: "/contact-us" },
 ];
 
+const searchableItems = [
+  { title: "Home", to: "/" },
+  { title: "Who We Are", to: "/who-we-are" },
+  { title: "Services & Incubation", to: "/Services" },
+  { title: "Events & News", to: "/news-event" },
+  { title: "GWEDC Women Center", to: "/GWEDC" },
+  { title: "Startup Registration", to: "/startup-registration" },
+  { title: "Mentor Registration", to: "/mentor-registration" },
+  { title: "Investor Registration", to: "/investor-registration" },
+  { title: "Partner Registration", to: "/partner-registration" },
+  { title: "Contact Us", to: "/contact-us" },
+  { title: "Privacy Policy", to: "/privacy-policy" },
+  { title: "Terms & Conditions", to: "/terms-conditions" },
+];
+
 /* ══════════════════════════════════
-   DROPDOWN PANEL
+   DROPDOWN PANEL (Desktop)
 ══════════════════════════════════ */
-const DropdownMenu = ({ items }) => (
+const DropdownMenu = ({ items, onItemClick }) => (
   <motion.div
-    initial={{ opacity: 0, y: 10, scale: 0.96 }}
+    initial={{ opacity: 0, y: 8, scale: 0.98 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, y: 6, scale: 0.97 }}
+    exit={{ opacity: 0, y: 6, scale: 0.98 }}
     transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-    style={{
-      position: "absolute",
-      top: "calc(100% + 10px)",
-      left: 0,
-      minWidth: "220px",
-      background: C.white,
-      border: `1px solid ${C.primaryLt}`,
-      borderRadius: "14px",
-      boxShadow: "0 16px 40px rgba(21, 67, 107, 0.13)",
-      overflow: "hidden",
-      zIndex: 9999,
-      pointerEvents: "auto",
-      padding: "8px",
-    }}
+    className="absolute top-[calc(100%+8px)] left-0 min-w-[230px] bg-white border border-[#E2E8F0] rounded-2xl shadow-xl shadow-[#15436B]/10 overflow-hidden z-50 p-2"
   >
     {/* Blue to Yellow accent top bar */}
     <div
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        height: "4px",
-        background: `linear-gradient(90deg, ${C.primary}, ${C.accent})`,
-      }}
+      className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#15436B] to-[#EA9F24]"
     />
-    <div style={{ paddingTop: "6px" }}>
+    <div className="pt-1.5 flex flex-col gap-0.5">
       {items.map((item, idx) => {
-        const itemStyles = {
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          padding: "12px 16px",
-          borderRadius: "10px",
-          fontSize: "15px",
-          color: C.text,
-          textDecoration: "none",
-          transition: "background 0.15s, color 0.15s",
-          fontWeight: 600,
-        };
-
-        const hoverEvents = {
-          onMouseEnter: (e) => {
-            e.currentTarget.style.background = C.primaryLt;
-            e.currentTarget.style.color = C.primary;
-          },
-          onMouseLeave: (e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = C.text;
-          },
-        };
-
+        const itemClass = "flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#334155] hover:text-[#15436B] hover:bg-[#F0F6FB] transition-all";
         const dot = (
-          <span
-            style={{
-              width: "6px",
-              height: "6px",
-              borderRadius: "50%",
-              background: C.accent,
-              flexShrink: 0,
-            }}
-          />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#EA9F24] flex-shrink-0" />
         );
 
         return item.to ? (
-          <Link key={idx} to={item.to} style={itemStyles} {...hoverEvents}>
+          <Link key={idx} to={item.to} className={itemClass} onClick={onItemClick}>
             {dot}
-            {item.name}
+            <span>{item.name}</span>
           </Link>
         ) : (
           <a
@@ -150,11 +111,12 @@ const DropdownMenu = ({ items }) => (
             href={item.href || "#"}
             target={item.external ? "_blank" : "_self"}
             rel={item.external ? "noopener noreferrer" : ""}
-            style={itemStyles}
-            {...hoverEvents}
+            className={itemClass}
+            onClick={onItemClick}
           >
             {dot}
-            {item.name}
+            <span>{item.name}</span>
+            {item.external && <ExternalLink size={13} className="ml-auto text-slate-400" />}
           </a>
         );
       })}
@@ -166,203 +128,65 @@ const DropdownMenu = ({ items }) => (
    POPUP MODAL
 ══════════════════════════════════ */
 const PopupModal = ({ onClose }) => {
-  const containerVariants = {
-    hidden: {},
-    visible: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } },
-    exit: {},
-  };
-  const itemVariants = {
-    hidden: { opacity: 0, y: 14 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { type: "spring", stiffness: 380, damping: 28 },
-    },
-    exit: { opacity: 0, y: 8 },
-  };
-
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 99999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "16px",
-      }}
-    >
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.28 }}
+        transition={{ duration: 0.25 }}
         onClick={onClose}
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "rgba(10, 34, 54, 0.72)",
-          backdropFilter: "blur(6px)",
-        }}
+        className="fixed inset-0 bg-[#0A2236]/75 backdrop-blur-sm"
       />
 
-      {/* Modal card */}
+      {/* Modal Card */}
       <motion.div
-        initial={{ scale: 0.82, opacity: 0, y: 32 }}
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.88, opacity: 0, y: 20 }}
-        transition={{ type: "spring", stiffness: 320, damping: 26, mass: 0.9 }}
-        style={{
-          position: "relative",
-          background: C.white,
-          borderRadius: "20px",
-          width: "100%",
-          maxWidth: "420px",
-          overflow: "hidden",
-          zIndex: 10,
-          boxShadow: `0 32px 80px rgba(21, 67, 107, 0.28), 0 8px 24px rgba(0,0,0,0.12)`,
-        }}
+        exit={{ scale: 0.92, opacity: 0, y: 15 }}
+        transition={{ type: "spring", stiffness: 350, damping: 28 }}
+        className="relative bg-white rounded-3xl w-full max-w-[420px] max-h-[90vh] overflow-y-auto z-10 shadow-2xl border border-slate-100"
       >
-        <div
-          style={{
-            height: "6px",
-            background: `linear-gradient(90deg, ${C.primary}, ${C.accent}, ${C.accentLight})`,
-          }}
-        />
+        <div className="h-1.5 bg-gradient-to-r from-[#15436B] via-[#EA9F24] to-[#F3C57B]" />
 
-        <motion.button
-          whileHover={{ scale: 1.12, rotate: 90 }}
-          whileTap={{ scale: 0.9 }}
-          transition={{ duration: 0.2 }}
+        <button
           onClick={onClose}
           aria-label="Close"
-          style={{
-            position: "absolute",
-            top: "14px",
-            right: "14px",
-            width: "36px",
-            height: "36px",
-            borderRadius: "50%",
-            background: "rgba(255,255,255,0.95)",
-            border: `1.5px solid ${C.primaryLt}`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            zIndex: 20,
-            boxShadow: "0 2px 8px rgba(21, 67, 107, 0.15)",
-          }}
+          className="absolute top-3.5 right-3.5 w-9 h-9 rounded-full bg-white/90 hover:bg-slate-100 border border-slate-200 flex items-center justify-center cursor-pointer z-20 transition-all text-[#15436B] shadow-sm hover:scale-105 active:scale-95"
         >
-          <X size={18} color={C.primary} />
-        </motion.button>
+          <X size={18} />
+        </button>
 
-        <motion.div
-          variants={itemVariants}
-          initial="hidden"
-          animate="visible"
-          style={{ lineHeight: 0, overflow: "hidden" }}
-        >
-          <motion.img
+        <div className="overflow-hidden">
+          <img
             src={popupImage} 
             alt="Little CEOs of Gwalior"
-            initial={{ scale: 1.06, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-            style={{ width: "100%", height: "auto", display: "block" }}
+            className="w-full h-auto block object-cover"
           />
-        </motion.div>
+        </div>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          style={{ padding: "24px 28px 28px" }}
-        >
-          <motion.div
-            variants={itemVariants}
-            style={{
-              marginBottom: "18px",
-              display: "flex",
-              justifyContent: "center",
-            }}
-          >
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                background: C.primaryLt,
-                color: C.primary,
-                borderRadius: "100px",
-                padding: "6px 16px",
-                fontSize: "13px",
-                fontWeight: 700,
-                letterSpacing: "0.02em",
-              }}
-            >
-              <span
-                style={{
-                  width: "8px",
-                  height: "8px",
-                  borderRadius: "50%",
-                  background: C.accent,
-                  animation: "pulse-dot 1.5s infinite",
-                }}
-              />
-              Registrations Open Now
-            </span>
-          </motion.div>
+        <div className="p-6 sm:p-7 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 bg-[#F0F6FB] text-[#15436B] rounded-full px-4 py-1.5 text-xs font-bold tracking-wide">
+            <span className="w-2 h-2 rounded-full bg-[#EA9F24] animate-pulse" />
+            Registrations Open Now
+          </div>
 
-          <motion.a
-            variants={itemVariants}
+          <a
             href={FORM_URL}
             target="_blank"
             rel="noopener noreferrer"
-            whileHover={{ scale: 1.025 }}
-            whileTap={{ scale: 0.975 }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              background: `linear-gradient(135deg, ${C.accent}, ${C.accentDk})`, // Golden Yellow Button
-              color: "#fff",
-              fontWeight: 800,
-              fontSize: "16px",
-              borderRadius: "12px",
-              padding: "16px",
-              textDecoration: "none",
-              boxShadow: `0 8px 24px rgba(234, 159, 36, 0.35)`,
-              letterSpacing: "0.01em",
-            }}
+            className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#EA9F24] to-[#D68A1B] hover:from-[#D68A1B] hover:to-[#B47012] text-white font-bold text-base rounded-xl py-3.5 px-6 shadow-lg shadow-[#EA9F24]/30 hover:shadow-xl hover:shadow-[#EA9F24]/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
           >
-            <Sparkles size={18} />
-            Register for Little CEOs
-            <ExternalLink size={16} />
-          </motion.a>
+            <span>Register for Little CEOs</span>
+            <ArrowRight size={16} />
+          </a>
 
-          <p
-            style={{
-              margin: "14px 0 0",
-              textAlign: "center",
-              fontSize: "12px",
-              color: C.muted,
-              fontWeight: 500
-            }}
-          >
+          <p className="mt-3 text-xs text-slate-400 font-medium">
             www.gincube.org
           </p>
-        </motion.div>
+        </div>
       </motion.div>
-
-      <style>{`
-        @keyframes pulse-dot {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(0.7); }
-        }
-      `}</style>
     </div>
   );
 };
@@ -374,8 +198,13 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [openMobileDropdown, setOpenMobileDropdown] = useState(null);
   const [scrolled, setScrolled] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const leaveTimer = useRef(null);
+  const searchInputRef = useRef(null);
+  const location = useLocation();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -383,40 +212,35 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Close mobile drawer and search on route change
+  useEffect(() => {
+    setIsOpen(false);
+    setActiveDropdown(null);
+    setOpenMobileDropdown(null);
+    setIsSearchOpen(false);
+    setSearchQuery("");
+  }, [location.pathname]);
+
   const openDropdown = (i) => {
     clearTimeout(leaveTimer.current);
     setActiveDropdown(i);
   };
   const startClose = () => {
-    leaveTimer.current = setTimeout(() => setActiveDropdown(null), 90);
+    leaveTimer.current = setTimeout(() => setActiveDropdown(null), 120);
   };
   const cancelClose = (i) => {
     clearTimeout(leaveTimer.current);
     setActiveDropdown(i);
   };
 
-  const linkStyles = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "6px",
-    padding: "10px 16px",
-    borderRadius: "10px",
-    fontSize: "16px", // Increased Text Size
-    fontWeight: 600, // Stronger weight
-    color: C.text,
-    textDecoration: "none",
-    transition: "background 0.15s, color 0.15s",
+  const toggleMobileDropdown = (i) => {
+    setOpenMobileDropdown(prev => (prev === i ? null : i));
   };
 
-  const linkHoverEvents = {
-    onMouseEnter: (e) => {
-      e.currentTarget.style.background = C.primaryLt;
-      e.currentTarget.style.color = C.primary;
-    },
-    onMouseLeave: (e) => {
-      e.currentTarget.style.background = "transparent";
-      e.currentTarget.style.color = C.text;
-    },
+  const isLinkActive = (link) => {
+    if (link.to && location.pathname === link.to) return true;
+    if (link.dropdown && link.dropdown.some(d => d.to === location.pathname)) return true;
+    return false;
   };
 
   return (
@@ -424,194 +248,241 @@ const Navbar = () => {
       <motion.nav
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 40,
-          background: scrolled
-            ? "rgba(255,255,255,0.96)"
-            : "rgba(255,255,255,0.92)",
-          backdropFilter: "blur(14px)",
-          borderBottom: scrolled
-            ? `1px solid ${C.primaryLt}`
-            : "1px solid transparent",
-          boxShadow: scrolled ? `0 4px 24px rgba(21, 67, 107, 0.08)` : "none",
-          transition: "box-shadow 0.3s, border-color 0.3s, background 0.3s",
-        }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+          scrolled
+            ? "bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm"
+            : "bg-white/90 backdrop-blur-sm border-b border-transparent"
+        }`}
       >
-        <div
-          style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              height: "80px", // Increased height to accommodate larger logo
-            }}
-          >
-            <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", flexShrink: 0 }}>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.96 }}
-                style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
-                aria-label="Go to Home"
-              >
-                <img
-                  src={logoImage} 
-                  alt="Gincube"
-                  style={{ height: "52px", width: "auto" }} // Increased Logo Size
-                />
-              </motion.div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            {/* Logo */}
+            <Link to="/" className="flex items-center flex-shrink-0" aria-label="Gincube Home">
+              <img
+                src={logoImage} 
+                alt="Gincube - Gwalior Incubation Center"
+                className="h-11 sm:h-12 w-auto object-contain transition-transform hover:scale-105"
+              />
             </Link>
 
-            {/* Desktop nav */}
-            <div
-              style={{ display: "none", alignItems: "center", gap: "6px" }}
-              className="desktop-nav"
-            >
-              {navLinks.map((link, i) => (
-                <div
-                  key={i}
-                  style={{ position: "relative" }}
-                  onMouseEnter={() => link.dropdown && openDropdown(i)}
-                  onMouseLeave={() => link.dropdown && startClose()}
-                >
-                  {link.isPopupTrigger ? (
-                    <motion.button
-                      whileHover={{ color: C.primary }}
-                      onClick={() => setIsPopupOpen(true)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        padding: "10px 16px",
-                        borderRadius: "10px",
-                        fontSize: "16px",
-                        fontWeight: 600,
-                        color: C.text,
-                        transition: "background 0.15s, color 0.15s",
-                      }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.background = C.primaryLt)
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.background = "transparent")
-                      }
-                    >
-                      {link.name}
-                    </motion.button>
-                  ) : link.to ? (
-                    <Link to={link.to} style={linkStyles} {...linkHoverEvents}>
-                      {link.name}
-                    </Link>
-                  ) : (
-                    <a
-                      href={link.href || "#"}
-                      style={linkStyles}
-                      {...linkHoverEvents}
-                    >
-                      {link.name}
-                      {link.dropdown && (
-                        <motion.span
-                          animate={{ rotate: activeDropdown === i ? 180 : 0 }}
-                          transition={{ duration: 0.22 }}
-                          style={{ display: "inline-flex", color: C.muted }}
-                        >
-                          <ChevronDown size={16} />
-                        </motion.span>
-                      )}
-                    </a>
-                  )}
-
-                  <AnimatePresence>
-                    {link.dropdown && activeDropdown === i && (
-                      <div
-                        onMouseEnter={() => cancelClose(i)}
-                        onMouseLeave={startClose}
+            {/* Desktop Navigation (Centered) */}
+            <nav className="hidden lg:flex items-center justify-center gap-1 xl:gap-2">
+              {navLinks.map((link, i) => {
+                const active = isLinkActive(link);
+                return (
+                  <div
+                    key={i}
+                    className="relative"
+                    onMouseEnter={() => link.dropdown && openDropdown(i)}
+                    onMouseLeave={() => link.dropdown && startClose()}
+                  >
+                    {link.to ? (
+                      <Link
+                        to={link.to}
+                        className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[15px] font-semibold transition-colors ${
+                          active
+                            ? "text-[#15436B] bg-[#F0F6FB]"
+                            : "text-[#334155] hover:text-[#15436B] hover:bg-[#F0F6FB]"
+                        }`}
                       >
-                        <DropdownMenu items={link.dropdown} />
-                      </div>
+                        {link.name}
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setActiveDropdown(activeDropdown === i ? null : i)}
+                        className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-[15px] font-semibold cursor-pointer border-none bg-transparent transition-colors ${
+                          active
+                            ? "text-[#15436B] bg-[#F0F6FB]"
+                            : "text-[#334155] hover:text-[#15436B] hover:bg-[#F0F6FB]"
+                        }`}
+                      >
+                        <span>{link.name}</span>
+                        {link.dropdown && (
+                          <ChevronDown
+                            size={15}
+                            className={`transition-transform duration-200 text-slate-400 ${
+                              activeDropdown === i ? "rotate-180 text-[#15436B]" : ""
+                            }`}
+                          />
+                        )}
+                      </button>
                     )}
-                  </AnimatePresence>
-                </div>
-              ))}
 
-              {/* CTA pill */}
-              <motion.button
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setIsPopupOpen(true)}
-                style={{
-                  marginLeft: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  background: `linear-gradient(135deg, ${C.accent}, ${C.accentDk})`, // Golden Yellow Button
-                  color: "#fff",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: "10px 22px",
-                  borderRadius: "100px",
-                  fontSize: "15px",
-                  fontWeight: 800,
-                  boxShadow: `0 4px 16px rgba(234, 159, 36, 0.35)`,
-                  transition: "box-shadow 0.2s",
+                    <AnimatePresence>
+                      {link.dropdown && activeDropdown === i && (
+                        <div
+                          onMouseEnter={() => cancelClose(i)}
+                          onMouseLeave={startClose}
+                        >
+                          <DropdownMenu
+                            items={link.dropdown}
+                            onItemClick={() => setActiveDropdown(null)}
+                          />
+                        </div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </nav>
+
+            {/* Desktop Actions: Search & Blue User Profile (Right) */}
+            <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
+              {/* Search Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSearchOpen(prev => !prev);
+                  setTimeout(() => searchInputRef.current?.focus(), 120);
                 }}
+                aria-label="Search"
+                title="Search"
+                className="w-10 h-10 flex items-center justify-center rounded-full text-[#334155] hover:text-[#15436B] hover:bg-[#F0F6FB] transition-colors cursor-pointer"
               >
-                <Sparkles size={16} />
-                Register
-              </motion.button>
+                <Search size={20} strokeWidth={2.2} />
+              </button>
+
+              {/* Blue Profile Icon (Navigates to Login) */}
+              <Link
+                to="/login"
+                aria-label="Login / Member Portal"
+                title="Member Login"
+                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-blue-50 transition-all cursor-pointer transform hover:scale-105 active:scale-95"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-5 h-5 fill-[#1877F2]"
+                  aria-hidden="true"
+                >
+                  <path d="M12 12c2.485 0 4.5-2.015 4.5-4.5S14.485 3 12 3 7.5 5.015 7.5 7.5 9.515 12 12 12zm0 2.25c-3.006 0-9 1.512-9 4.5v1.5c0 .414.336.75.75.75h16.5c.414 0 .75-.336.75-.75v-1.5c0-2.988-5.994-4.5-9-4.5z" />
+                </svg>
+              </Link>
             </div>
 
-            {/* Hamburger */}
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setIsOpen(!isOpen)}
-              className="mobile-menu-btn"
-              aria-label="Toggle menu"
-              style={{
-                background: "none",
-                border: `2px solid ${C.primaryLt}`,
-                borderRadius: "12px",
-                padding: "8px",
-                cursor: "pointer",
-                color: C.primary,
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                {isOpen ? (
-                  <motion.span
-                    key="close"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                  >
-                    <X size={26} />
-                  </motion.span>
-                ) : (
-                  <motion.span
-                    key="open"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                  >
-                    <Menu size={26} />
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
+            {/* Mobile Actions: Search, Blue Profile & Menu Toggle */}
+            <div className="flex items-center gap-1 lg:hidden">
+              {/* Mobile Search Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSearchOpen(prev => !prev);
+                  setTimeout(() => searchInputRef.current?.focus(), 120);
+                }}
+                aria-label="Search"
+                title="Search"
+                className="w-9 h-9 flex items-center justify-center rounded-full text-[#334155] hover:text-[#15436B] hover:bg-[#F0F6FB] transition-colors cursor-pointer"
+              >
+                <Search size={19} strokeWidth={2.2} />
+              </button>
+
+              {/* Mobile Blue Profile Icon (Navigates to Login) */}
+              <Link
+                to="/login"
+                aria-label="Login / Member Portal"
+                title="Member Login"
+                className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-blue-50 transition-transform active:scale-95 cursor-pointer"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-5 h-5 fill-[#1877F2]"
+                  aria-hidden="true"
+                >
+                  <path d="M12 12c2.485 0 4.5-2.015 4.5-4.5S14.485 3 12 3 7.5 5.015 7.5 7.5 9.515 12 12 12zm0 2.25c-3.006 0-9 1.512-9 4.5v1.5c0 .414.336.75.75.75h16.5c.414 0 .75-.336.75-.75v-1.5c0-2.988-5.994-4.5-9-4.5z" />
+                </svg>
+              </Link>
+
+              {/* Mobile Drawer Menu Toggle */}
+              <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                aria-label={isOpen ? "Close menu" : "Open menu"}
+                className="p-2 ml-1 rounded-xl text-[#15436B] hover:bg-[#F0F6FB] border border-slate-200 transition-colors cursor-pointer"
+              >
+                {isOpen ? <X size={22} /> : <Menu size={22} />}
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Mobile drawer */}
+        {/* Interactive Search Bar Dropdown */}
+        <AnimatePresence>
+          {isSearchOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="border-t border-slate-100 bg-white/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 py-3 shadow-md overflow-hidden"
+            >
+              <div className="max-w-4xl mx-auto">
+                <div className="flex items-center gap-3 bg-[#F0F6FB] border border-[#E2EEF8] rounded-xl px-3.5 py-2">
+                  <Search size={18} className="text-[#15436B] shrink-0" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search programs, events, services, registrations..."
+                    className="flex-1 bg-transparent border-none outline-none text-sm text-[#0A2236] placeholder:text-slate-400 font-medium"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      className="text-xs text-slate-400 hover:text-slate-600 px-1 cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSearchOpen(false);
+                      setSearchQuery("");
+                    }}
+                    className="p-1 text-slate-400 hover:text-slate-600 rounded-md cursor-pointer"
+                    aria-label="Close search"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {/* Quick Results / Suggestions */}
+                {searchQuery.trim().length > 0 && (
+                  <div className="mt-2.5 pt-2 border-t border-slate-100 flex flex-wrap gap-2">
+                    {searchableItems
+                      .filter((item) =>
+                        item.title.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                      .slice(0, 6)
+                      .map((item, idx) => (
+                        <Link
+                          key={idx}
+                          to={item.to}
+                          onClick={() => {
+                            setIsSearchOpen(false);
+                            setSearchQuery("");
+                          }}
+                          className="text-xs px-3 py-1.5 rounded-full bg-white border border-slate-200 text-[#15436B] hover:bg-[#F0F6FB] hover:border-[#15436B]/30 font-semibold transition-all shadow-xs"
+                        >
+                          {item.title}
+                        </Link>
+                      ))}
+                    {searchableItems.filter((item) =>
+                      item.title.toLowerCase().includes(searchQuery.toLowerCase())
+                    ).length === 0 && (
+                      <p className="text-xs text-slate-400 py-1">No matching pages found.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Mobile Drawer */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
@@ -619,164 +490,110 @@ const Navbar = () => {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              style={{
-                background: "#fff",
-                borderTop: `1px solid ${C.primaryLt}`,
-                overflow: "hidden",
-              }}
+              className="lg:hidden bg-white border-t border-slate-100 shadow-xl overflow-hidden max-h-[calc(100vh-80px)] overflow-y-auto"
             >
-              <div style={{ padding: "16px 20px 32px" }}>
-                {navLinks.map((link, i) => (
-                  <div key={i}>
-                    {link.isPopupTrigger ? (
-                      <button
-                        onClick={() => {
-                          setIsPopupOpen(true);
-                          setIsOpen(false);
-                        }}
-                        style={{
-                          width: "100%",
-                          textAlign: "left",
-                          background: "none",
-                          border: "none",
-                          padding: "16px",
-                          borderRadius: "12px",
-                          fontSize: "18px", // Larger Text Mobile
-                          fontWeight: 600,
-                          color: C.text,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {link.name}
-                      </button>
-                    ) : (
-                      <>
-                        {link.to ? (
-                          <Link
-                            to={link.to}
-                            onClick={() => setIsOpen(false)}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              padding: "16px",
-                              borderRadius: "12px",
-                              fontSize: "18px", // Larger Text Mobile
-                              fontWeight: 600,
-                              color: C.text,
-                              textDecoration: "none",
-                            }}
-                          >
-                            {link.name}
-                          </Link>
-                        ) : (
-                          <a
-                            href={link.href || "#"}
-                            onClick={() => !link.dropdown && setIsOpen(false)}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              padding: "16px",
-                              borderRadius: "12px",
-                              fontSize: "18px", // Larger Text Mobile
-                              fontWeight: 600,
-                              color: C.text,
-                              textDecoration: "none",
-                            }}
-                          >
-                            {link.name}
-                            {link.dropdown && (
-                              <ChevronDown size={18} color={C.muted} />
-                            )}
-                          </a>
-                        )}
+              <div className="px-4 py-5 flex flex-col gap-1">
+                {navLinks.map((link, i) => {
+                  const active = isLinkActive(link);
+                  const isDropdownExpanded = openMobileDropdown === i;
 
-                        {link.dropdown && (
-                          <div
-                            style={{ paddingLeft: "24px", marginBottom: "8px" }}
+                  if (link.to) {
+                    return (
+                      <Link
+                        key={i}
+                        to={link.to}
+                        onClick={() => setIsOpen(false)}
+                        className={`flex items-center justify-between px-4 py-3 rounded-xl text-base font-semibold transition-colors ${
+                          active
+                            ? "bg-[#F0F6FB] text-[#15436B]"
+                            : "text-[#334155] hover:bg-slate-50"
+                        }`}
+                      >
+                        <span>{link.name}</span>
+                        {active && <span className="w-2 h-2 rounded-full bg-[#EA9F24]" />}
+                      </Link>
+                    );
+                  }
+
+                  return (
+                    <div key={i} className="flex flex-col">
+                      <button
+                        type="button"
+                        onClick={() => toggleMobileDropdown(i)}
+                        className={`flex items-center justify-between w-full px-4 py-3 rounded-xl text-base font-semibold text-left transition-colors cursor-pointer ${
+                          active || isDropdownExpanded
+                            ? "bg-[#F0F6FB] text-[#15436B]"
+                            : "text-[#334155] hover:bg-slate-50"
+                        }`}
+                      >
+                        <span>{link.name}</span>
+                        <ChevronDown
+                          size={18}
+                          className={`transition-transform duration-200 text-slate-400 ${
+                            isDropdownExpanded ? "rotate-180 text-[#15436B]" : ""
+                          }`}
+                        />
+                      </button>
+
+                      <AnimatePresence>
+                        {isDropdownExpanded && link.dropdown && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="pl-4 pr-2 py-1.5 flex flex-col gap-1 overflow-hidden"
                           >
                             {link.dropdown.map((item, idx) => {
-                              const dropdownItemStyle = {
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "10px",
-                                padding: "12px 16px",
-                                borderRadius: "10px",
-                                fontSize: "15px",
-                                fontWeight: 600,
-                                color: C.muted,
-                                textDecoration: "none",
-                              };
-
-                              const dot = (
-                                <span
-                                  style={{
-                                    width: "6px",
-                                    height: "6px",
-                                    borderRadius: "50%",
-                                    background: C.accent,
-                                  }}
-                                />
-                              );
+                              const isSubActive = location.pathname === item.to;
+                              const subClass = `flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                                isSubActive
+                                  ? "text-[#15436B] bg-[#E2EEF8]"
+                                  : "text-slate-600 hover:text-[#15436B] hover:bg-slate-50"
+                              }`;
 
                               return item.to ? (
                                 <Link
                                   key={idx}
                                   to={item.to}
                                   onClick={() => setIsOpen(false)}
-                                  style={dropdownItemStyle}
+                                  className={subClass}
                                 >
-                                  {dot}
-                                  {item.name}
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#EA9F24]" />
+                                  <span>{item.name}</span>
                                 </Link>
                               ) : (
                                 <a
                                   key={idx}
                                   href={item.href || "#"}
                                   target={item.external ? "_blank" : "_self"}
-                                  rel={
-                                    item.external ? "noopener noreferrer" : ""
-                                  }
+                                  rel={item.external ? "noopener noreferrer" : ""}
                                   onClick={() => setIsOpen(false)}
-                                  style={dropdownItemStyle}
+                                  className={subClass}
                                 >
-                                  {dot}
-                                  {item.name}
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#EA9F24]" />
+                                  <span>{item.name}</span>
+                                  {item.external && <ExternalLink size={13} className="ml-auto text-slate-400" />}
                                 </a>
                               );
                             })}
-                          </div>
+                          </motion.div>
                         )}
-                      </>
-                    )}
-                  </div>
-                ))}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
 
-                {/* Mobile register CTA */}
-                <div style={{ marginTop: "16px", padding: "0 8px" }}>
+                {/* Mobile Drawer CTA */}
+                <div className="pt-4 pb-2">
                   <a
                     href={FORM_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "10px",
-                      background: `linear-gradient(135deg, ${C.accent}, ${C.accentDk})`, // Golden Yellow Button
-                      color: "#fff",
-                      textDecoration: "none",
-                      borderRadius: "14px",
-                      padding: "16px",
-                      fontSize: "16px",
-                      fontWeight: 800,
-                      boxShadow: `0 8px 24px rgba(234, 159, 36, 0.35)`,
-                    }}
+                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#EA9F24] to-[#D68A1B] text-white font-bold py-3.5 px-4 rounded-xl shadow-md text-sm"
                   >
-                    <Sparkles size={18} />
-                    Register for Little CEOs
-                    <ExternalLink size={16} />
+                    <span>Register for Little CEOs</span>
+                    <ExternalLink size={15} />
                   </a>
                 </div>
               </div>
@@ -785,18 +602,10 @@ const Navbar = () => {
         </AnimatePresence>
       </motion.nav>
 
-      {/* Popup */}
+      {/* Popup Modal */}
       <AnimatePresence>
         {isPopupOpen && <PopupModal onClose={() => setIsPopupOpen(false)} />}
       </AnimatePresence>
-
-      {/* Responsive CSS */}
-      <style>{`
-        @media (min-width: 1024px) {
-          .desktop-nav { display: flex !important; }
-          .mobile-menu-btn { display: none !important; }
-        }
-      `}</style>
     </>
   );
 };

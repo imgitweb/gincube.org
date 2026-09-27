@@ -69,12 +69,16 @@ const StatsAndCTA = () => {
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
           >
-             {/* CTA Button: Yellow gradient base to match the chat bot & theme */}
+             {/* CTA Button */}
              <Link 
                to="/startup-registration"
-               className="inline-block bg-gradient-to-r from-[#EA9F24] to-[#D68A1B] hover:from-[#D68A1B] hover:to-[#B47012] text-white hover:shadow-[0_10px_30px_rgba(234,159,36,0.4)] px-10 py-4 rounded-full font-extrabold text-lg transition-all duration-300 transform hover:-translate-y-1"
+               className="inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#EA9F24] to-[#D68A1B] hover:from-[#D68A1B] hover:to-[#B47012] text-white hover:shadow-[0_12px_32px_rgba(234,159,36,0.4)] px-9 py-4 rounded-full font-extrabold text-base sm:text-lg transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
              >
-               Start Your Journey Now
+               <span>Start Your Journey Now</span>
+               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                 <line x1="5" y1="12" x2="19" y2="12"></line>
+                 <polyline points="12 5 19 12 12 19"></polyline>
+               </svg>
              </Link>
           </motion.div>
         </div>
