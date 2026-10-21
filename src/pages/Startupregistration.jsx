@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
-import ReCAPTCHA from "react-google-recaptcha";
 import { User, Mail, Phone, Lock, Building, MapPin, Target, Send, Globe } from 'lucide-react';
 
 // Apna JSON data import karein
+import API_URL from '../components/Config';
 import locationData from '../data/locationdata.json'; 
 
 export default function StartupRegistration() {
@@ -31,11 +31,7 @@ export default function StartupRegistration() {
         summary: '', // Elevator Pitch
         problemStatement: ''
     });
-
-    const [captchaToken, setCaptchaToken] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
-    const recaptchaRef = useRef(null);
 
     // Dynamic lists from JSON
     const countriesList = locationData?.countries || [];
@@ -62,10 +58,6 @@ export default function StartupRegistration() {
         setFormData({ ...formData, state: e.target.value, city: '' });
     };
 
-    const handleRecaptcha = (token) => {
-        setCaptchaToken(token);
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -75,7 +67,7 @@ export default function StartupRegistration() {
             firstName: formData.firstName,
             lastName: formData.lastName,
             email: formData.email,
-            password: formData.password,
+            password: formData.mobile,
             startupName: formData.startupName,
             selectedPlan: "sigma", // Default
             country: formData.country,
@@ -92,11 +84,11 @@ export default function StartupRegistration() {
             incubationId: "6ab39542497aa33526fcd95b", // Target ID added here
             currency: "INR",
             language: "English",
-            recaptchaToken: captchaToken || "" // Sending token if filled (Optional)
         };
 
         try {
-            const response = await fetch('https://incubationmasters.com/api/startups', {
+            const baseApi = API_URL ? API_URL.replace(/\/incubation\/?$/, '') : 'http://localhost:5000/api';
+        const response = await fetch(`${baseApi}/startups`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -109,8 +101,6 @@ export default function StartupRegistration() {
                     startupName: '', website: '', dpiit: '', stage: '', sectors: '', revenueStarted: 'false',
                     country: '', state: '', city: '', problemStatement: '', summary: ''
                 });
-                if(recaptchaRef.current) recaptchaRef.current.reset();
-                setCaptchaToken(null);
             } else {
                 const errorData = await response.json();
                 alert(`Failed to register: ${errorData.message || "Please check your inputs."}`);
@@ -178,10 +168,6 @@ export default function StartupRegistration() {
                                 <div>
                                     <label className={labelStyle}><Phone className="w-4 h-4 mr-1.5 text-[#15436B]" /> Mobile Number <span className="text-[#EF4444] ml-1">*</span></label>
                                     <input type="tel" required className={inputStyle} placeholder="10-digit Mobile" name="mobile" value={formData.mobile} onChange={handleChange} maxLength="15" />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className={labelStyle}><Lock className="w-4 h-4 mr-1.5 text-[#15436B]" /> Password <span className="text-[#EF4444] ml-1">*</span></label>
-                                    <input type="password" required className={inputStyle} placeholder="Create a strong password" name="password" value={formData.password} onChange={handleChange} />
                                 </div>
                             </div>
                         </div>
@@ -307,19 +293,6 @@ export default function StartupRegistration() {
                                     <textarea rows="4" required className={`${inputStyle} resize-none`} name="summary" placeholder="Describe your product/service and how it solves the problem..." value={formData.summary} onChange={handleChange}></textarea>
                                 </div>
                             </div>
-                        </div>
-
-                        {/* --- 5. GOOGLE RECAPTCHA (OPTIONAL) --- */}
-                        <div className="mt-8 bg-[#F0F6FB] p-6 rounded-[16px] border border-[#E2E8F0] flex flex-col items-center">
-                            <label className="text-[0.85rem] font-bold text-[#15436B] uppercase tracking-wider mb-4">
-                                Security Verification <span className="font-medium normal-case text-[#64748B]">(Optional)</span>
-                            </label>
-                            
-                            <ReCAPTCHA
-                                ref={recaptchaRef}
-                                sitekey={import.meta.env.VITE_RECAPTCHA_KEY || "YOUR_FALLBACK_SITE_KEY_IF_ENV_IS_MISSING"}
-                                onChange={handleRecaptcha}
-                            />
                         </div>
 
                         {/* --- 6. SUBMIT --- */}

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Building, User, Mail, Phone, MapPin, Send, Globe, FileText, Image as ImageIcon, Briefcase } from 'lucide-react';
-import ReCAPTCHA from "react-google-recaptcha";
 import API_URL from "../components/Config"; // Load API URL from Config
 import locationData from '../data/locationdata.json'; // Load local JSON data
 
@@ -30,7 +29,6 @@ export default function PartnerRegistration() {
   const pageRef = useRef(null);
   const bannerTextRef = useRef(null);
   const formRef = useRef(null);
-  const recaptchaRef = useRef(null);
 
   // Form State combining both API requirements
   const [formData, setFormData] = useState({
@@ -55,7 +53,6 @@ export default function PartnerRegistration() {
   });
 
   const [errors, setErrors] = useState({});
-  const [captchaToken, setCaptchaToken] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Derived states for location dropdowns based on JSON
@@ -104,10 +101,6 @@ export default function PartnerRegistration() {
     const val = e.target.value;
     setFormData({ ...formData, state: val, city: '' });
     if (errors.state) setErrors({ ...errors, state: null });
-  };
-
-  const handleRecaptcha = (token) => {
-    setCaptchaToken(token);
   };
 
   const validateForm = () => {
@@ -161,35 +154,15 @@ export default function PartnerRegistration() {
       const validTypes = ['Investor', 'Mentor', 'Legal'];
       const mappedNodePartnerType = validTypes.includes(formData.partnerType) ? formData.partnerType : 'Other';
       nodePayload.append('partnerType', mappedNodePartnerType);
-
-      // --- 2. Payload for RiseJhansi API ---
-      const risePayload = new FormData();
-      risePayload.append('name_of_farm', formData.firmName);
-      risePayload.append('email', formData.email);
-      risePayload.append('mobile', formData.mobile);
-      risePayload.append('country', formData.country); 
-      risePayload.append('state', formData.state);
-      risePayload.append('city', formData.city);
-      risePayload.append('specify_your_type', formData.partnerType); 
-      risePayload.append('linkedin', formData.linkedinUrl);
-      risePayload.append('code_again', 'BYPASS');
-      risePayload.append('captcha', captchaToken || ''); // Optional Captcha
-
       try {
-        // Run both API calls concurrently using fetch
-        const [nodeRes, riseRes] = await Promise.allSettled([
-          fetch(nodeEndpoint, { method: 'POST', body: nodePayload }), // Boundary automatically handled
-          fetch('https://risejhansi.in/PartnerController/savePartner', { method: 'POST', body: risePayload })
-        ]);
+        const response = await fetch(nodeEndpoint, { method: 'POST', body: nodePayload });
 
-        const isNodeSuccess = nodeRes.status === 'fulfilled' && nodeRes.value.ok;
-        const isRiseSuccess = riseRes.status === 'fulfilled' && riseRes.value.ok;
-
-        if (isNodeSuccess || isRiseSuccess) {
+        if (response.ok) {
           alert("Partner Registration Successful!");
-          window.location.reload(); 
+          window.location.reload();
         } else {
-          alert("Failed to register on servers. Please check your inputs.");
+          const errData = await response.json().catch(() => ({}));
+          alert(`Failed to register: ${errData.message || "Please check your inputs."}`);
         }
       } catch (err) {
         console.error("API Error:", err);
@@ -361,19 +334,6 @@ export default function PartnerRegistration() {
                   {errors.city && <p className={errorStyle}>{errors.city}</p>}
                 </div>
               </div>
-            </div>
-
-            {/* --- 4. SECURITY (OPTIONAL CAPTCHA) --- */}
-            <div className="mt-8 bg-[#F0F6FB] p-6 rounded-[16px] border border-[#E2E8F0] flex flex-col items-center">
-              <label className="text-[0.85rem] font-bold text-[#15436B] uppercase tracking-wider mb-4">
-                  Security Verification <span className="font-medium normal-case text-[#64748B]">(Optional)</span>
-              </label>
-              
-              <ReCAPTCHA
-                  ref={recaptchaRef}
-                  sitekey={import.meta.env.VITE_RECAPTCHA_KEY || "YOUR_FALLBACK_SITE_KEY_IF_ENV_IS_MISSING"}
-                  onChange={handleRecaptcha}
-              />
             </div>
 
             {/* --- 5. SUBMIT BUTTON --- */}

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { User, Mail, Phone, MapPin, Send, Briefcase, Globe, FileText, Image as ImageIcon, Lock } from 'lucide-react';
-import ReCAPTCHA from "react-google-recaptcha";
 import API_URL from "../components/Config"; // Load API URL from Config
 import locationData from '../data/locationdata.json'; // Load local JSON data
 
@@ -32,7 +31,6 @@ export default function MentorRegistration() {
   const pageRef = useRef(null);
   const bannerTextRef = useRef(null);
   const formRef = useRef(null);
-  const recaptchaRef = useRef(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -57,7 +55,6 @@ export default function MentorRegistration() {
 
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [errors, setErrors] = useState({});
-  const [captchaToken, setCaptchaToken] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Derived states for location dropdowns based on JSON
@@ -121,10 +118,6 @@ export default function MentorRegistration() {
     if (errors.state) setErrors({ ...errors, state: null });
   };
 
-  const handleRecaptcha = (token) => {
-    setCaptchaToken(token);
-  };
-
   const validateForm = () => {
     let newErrors = {};
     let isValid = true;
@@ -183,37 +176,18 @@ export default function MentorRegistration() {
       nodePayload.append('city', formData.city);
       nodePayload.append('linkedin', formData.linkedin_url);
       nodePayload.append('specializationIn', formData.specializationIn || 'General');
-
-      // --- 2. Payload for Legacy API ---
-      const risePayload = new FormData();
-      risePayload.append('name', formData.name);
-      risePayload.append('email', formData.email);
-      risePayload.append('mobile', formData.mobile);
-      risePayload.append('country', formData.country);
-      risePayload.append('state', formData.state);
-      risePayload.append('city', formData.city);
-      risePayload.append('linkedin_url', formData.linkedin_url);
-      risePayload.append('no_of_mentor_year', formData.totalExp);
-      risePayload.append('captcha', captchaToken || ''); 
-      
-      if (selectedSkills.includes('IT Expert')) risePayload.append('is_it_expert', 1);
-      if (selectedSkills.includes('Business Strategy Expert')) risePayload.append('is_business_strategy_expert', 1);
-      if (selectedSkills.includes('Finance Expert')) risePayload.append('is_finance_expert', 1);
-      if (selectedSkills.includes('Marketing Expert')) risePayload.append('is_marketing_expert', 1);
-
       try {
-        const [nodeRes, riseRes] = await Promise.allSettled([
-          fetch(nodeEndpoint, { method: 'POST', body: nodePayload }), 
-          fetch('https://risejhansi.in/MentorController/saveMentor', { method: 'POST', body: risePayload })
-        ]);
+        const response = await fetch(nodeEndpoint, { method: 'POST', body: nodePayload });
 
-        if ((nodeRes.status === 'fulfilled' && nodeRes.value.ok) || (riseRes.status === 'fulfilled' && riseRes.value.ok)) {
+        if (response.ok) {
           alert("Mentor Registration Successful!");
-          window.location.reload(); 
+          window.location.reload();
         } else {
-          alert("Failed to register on servers. Please check your inputs.");
+          const errData = await response.json().catch(() => ({}));
+          alert(`Failed to register: ${errData.message || "Please check your inputs."}`);
         }
       } catch (err) {
+        console.error("API Error:", err);
         alert("Network error. Could not connect to servers.");
       } finally {
         setIsSubmitting(false);
@@ -420,19 +394,6 @@ export default function MentorRegistration() {
                 onChange={handleChange} 
                 placeholder="Brief bio about your mentoring experience..."
               ></textarea>
-            </div>
-
-            {/* --- 5. SECURITY (OPTIONAL CAPTCHA) --- */}
-            <div className="mt-8 bg-[#F0F6FB] p-6 rounded-[16px] border border-[#E2E8F0] flex flex-col items-center">
-              <label className="text-[0.85rem] font-bold text-[#15436B] uppercase tracking-wider mb-4">
-                  Security Verification <span className="font-medium normal-case text-[#64748B]">(Optional)</span>
-              </label>
-              
-              <ReCAPTCHA
-                  ref={recaptchaRef}
-                  sitekey={import.meta.env.VITE_RECAPTCHA_KEY || "YOUR_FALLBACK_SITE_KEY_IF_ENV_IS_MISSING"}
-                  onChange={handleRecaptcha}
-              />
             </div>
 
             {/* --- 6. SUBMIT BUTTON --- */}

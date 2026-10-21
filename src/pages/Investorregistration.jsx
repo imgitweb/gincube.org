@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { User, Mail, Phone, MapPin, Send, Building, Globe, FileText, Image as ImageIcon, Briefcase } from 'lucide-react';
-import ReCAPTCHA from "react-google-recaptcha";
 import API_URL from "../components/Config"; // Load API URL from Config
 import locationData from '../data/locationdata.json'; // Load local JSON data
 
@@ -30,7 +29,6 @@ export default function InvestorRegistration() {
   const pageRef = useRef(null);
   const bannerTextRef = useRef(null);
   const formRef = useRef(null);
-  const recaptchaRef = useRef(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -55,7 +53,6 @@ export default function InvestorRegistration() {
   const [selectedStages, setSelectedStages] = useState([]);
   const [selectedIndustries, setSelectedIndustries] = useState([]);
   const [errors, setErrors] = useState({});
-  const [captchaToken, setCaptchaToken] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const availableStages = ['Ideation', 'Validation', 'Prototype/MVP', 'Scaling'];
@@ -113,10 +110,6 @@ export default function InvestorRegistration() {
     setArray(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
   };
 
-  const handleRecaptcha = (token) => {
-    setCaptchaToken(token);
-  };
-
   const validateForm = () => {
     let newErrors = {};
     let isValid = true;
@@ -170,40 +163,15 @@ export default function InvestorRegistration() {
       nodePayload.append('fullDescription', formData.fullDescription);
       nodePayload.append('stage', JSON.stringify(selectedStages));
       nodePayload.append('industry', JSON.stringify(selectedIndustries));
-
-      // --- 2. Payload for Legacy API ---
-      const risePayload = new FormData();
-      risePayload.append('company_name', formData.companyName || 'Individual');
-      risePayload.append('investor_name', formData.investorName);
-      risePayload.append('email', formData.email);
-      risePayload.append('mobile', formData.mobile);
-      risePayload.append('country', formData.country);
-      risePayload.append('state', formData.state);
-      risePayload.append('city', formData.city);
-      risePayload.append('company_fund', formData.companyFund);
-      risePayload.append('investment_limit', formData.investmentLimit);
-      risePayload.append('investor_type', formData.investorType);
-      
-      if (selectedStages.includes('Ideation')) risePayload.append('stage_ideation', 1);
-      if (selectedStages.includes('Validation')) risePayload.append('stage_validation', 1);
-      
-      risePayload.append('code_again', 'BYPASS'); 
-      risePayload.append('captcha', captchaToken || ''); 
-
       try {
-        const [nodeRes, riseRes] = await Promise.allSettled([
-          fetch(nodeEndpoint, { method: 'POST', body: nodePayload }),
-          fetch('https://risejhansi.in/InvestorController/saveInvestor', { method: 'POST', body: risePayload })
-        ]);
+        const response = await fetch(nodeEndpoint, { method: 'POST', body: nodePayload });
 
-        const isNodeSuccess = nodeRes.status === 'fulfilled' && nodeRes.value.ok;
-        const isRiseSuccess = riseRes.status === 'fulfilled' && riseRes.value.ok;
-
-        if (isNodeSuccess || isRiseSuccess) {
+        if (response.ok) {
           alert("Investor Registration Successful!");
-          window.location.reload(); 
+          window.location.reload();
         } else {
-          alert("Failed to register on servers. Please try again.");
+          const errData = await response.json().catch(() => ({}));
+          alert(`Failed to register: ${errData.message || "Please try again."}`);
         }
       } catch (err) {
         console.error("API Error:", err);
@@ -422,20 +390,6 @@ export default function InvestorRegistration() {
                   <textarea name="fullDescription" rows="4" className={`${inputStyle} resize-none min-h-[120px]`} value={formData.fullDescription} onChange={handleChange} placeholder="Detailed description..."></textarea>
                 </div>
               </div>
-            </div>
-
-            {/* --- 5. SECURITY (OPTIONAL CAPTCHA) --- */}
-            <div className="mt-8 bg-[#F0F6FB] p-6 rounded-[16px] border border-[#E2E8F0] flex flex-col items-center">
-              <label className="text-[0.85rem] font-bold text-[#15436B] uppercase tracking-wider mb-4">
-                  Security Verification <span className="font-medium normal-case text-[#64748B]">(Optional)</span>
-              </label>
-              
-              {/* Uses the key from your .env file */}
-              <ReCAPTCHA
-                  ref={recaptchaRef}
-                  sitekey={import.meta.env.VITE_RECAPTCHA_KEY || "YOUR_FALLBACK_SITE_KEY_IF_ENV_IS_MISSING"}
-                  onChange={handleRecaptcha}
-              />
             </div>
 
             {/* --- 6. SUBMIT BUTTON --- */}

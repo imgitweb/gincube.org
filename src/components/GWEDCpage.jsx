@@ -322,34 +322,18 @@ const JoinForm = () => {
       location: form.location,
       startupIdea: form.idea
     };
-
-    const risePayload = new FormData();
-    risePayload.append('applicant_name', form.name);
-    risePayload.append('email_id', form.email);
-    risePayload.append('mobile_no', form.mobile);
-    risePayload.append('location', form.location);
-    risePayload.append('startupidea', form.idea);
-
     try {
-      const [nodeRes, riseRes] = await Promise.allSettled([
-        fetch(nodeEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(nodePayload)
-        }),
-        fetch('https://risejhansi.in/Manikarnika/joinProgram', {
-          method: 'POST',
-          body: risePayload
-        })
-      ]);
+      const response = await fetch(nodeEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nodePayload)
+      });
 
-      const isNodeSuccess = nodeRes.status === 'fulfilled' && nodeRes.value.ok;
-      const isRiseSuccess = riseRes.status === 'fulfilled' && riseRes.value.ok;
-
-      if (isNodeSuccess || isRiseSuccess) {
+      if (response.ok) {
         setSubmitted(true);
       } else {
-        alert("Failed to submit application. Please try again.");
+        const errData = await response.json().catch(() => ({}));
+        alert(`Failed to submit application: ${errData.message || "Please try again."}`);
       }
     } catch (err) {
       console.error("API Error:", err);
