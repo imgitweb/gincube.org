@@ -1,70 +1,50 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Building, User, Mail, Phone, MapPin, Send, Globe, FileText, Image as ImageIcon, Briefcase } from 'lucide-react';
-import API_URL from "../components/Config"; // Load API URL from Config
-import locationData from '../data/locationdata.json'; // Load local JSON data
+import { Building, User, Mail, Phone, MapPin, Send, Globe, FileText, Image as ImageIcon, Briefcase, AlertCircle } from 'lucide-react';
+import API_URL from "../components/Config";
+import locationData from '../data/locationdata.json';
+import { usePopup } from '../context/PopupContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
-/* ─────────────────────────────────────────
-   BRAND TOKENS (Premium Navy Blue & Golden Yellow Theme)
-───────────────────────────────────────── */
-const C = {
-  primary:    '#15436B', // Deep Navy Blue
-  mid:        '#1C5A8F', // Mid Blue
-  light:      '#287BBE', // Lighter Blue
-  pale:       '#E2E8F0', // Pale Slate for borders
-  lt:         '#F8FAFC', // Lightest slate for bg
-  dark:       '#0A2236', // Darkest Navy
-  heading:    '#0A2236', // Crisp slate for headings
-  text:       '#334155', // Modern slate gray
-  muted:      '#64748B', // Muted text
-  accent:     '#EA9F24', // Golden Yellow
-  accentDk:   '#D68A1B', // Dark Yellow
-  white:      '#FFFFFF',
-};
-
 export default function PartnerRegistration() {
+  const { showError, showSuccess } = usePopup();
+
   const pageRef = useRef(null);
   const bannerTextRef = useRef(null);
   const formRef = useRef(null);
+  const fileInputRef = useRef(null);
 
-  // Form State combining both API requirements
+  // Form State
   const [formData, setFormData] = useState({
-    firmName: '',        // Maps to name_of_farm (Legacy) & companyName (Node)
-    contactName: '',     // Maps to name (Node)
-    email: '',           // Maps to email (Both)
-    mobile: '',          // Maps to mobile (Legacy) & contactNumber (Node)
-    designation: '',     // Maps to designation (Node)
-    
-    country: '',         // Storing string names now
-    state: '',           // Storing string names now
-    city: '',            // Storing string names now
-    
-    partnerType: '',     // Maps to partnerType enum (Node) & specify_your_type (Legacy)
-    industry: '',        // Maps to industry (Node)
-    linkedinUrl: '',     // Maps to linkedin (Legacy) & linkedinUrl (Node)
-    websiteUrl: '',      // Maps to websiteUrl (Node)
-    description: '',     // Maps to description (Node)
-    
-    image: null,         // Maps to imageUrl (Node via multer)
-    bot_field: ''        // Honeypot
+    firmName: '',
+    contactName: '',
+    email: '',
+    mobile: '',
+    designation: '',
+    country: '',
+    state: '',
+    city: '',
+    partnerType: '',
+    industry: '',
+    linkedinUrl: '',
+    websiteUrl: '',
+    description: '',
+    image: null,
+    bot_field: '' // Honeypot
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Derived states for location dropdowns based on JSON
   const countriesList = locationData?.countries || [];
   const indiaStates = locationData?.indiaData ? Object.keys(locationData.indiaData) : [];
   
-  // Get cities list if "India" and a valid state is selected
   const availableCities = (formData.country === 'India' && formData.state && locationData?.indiaData[formData.state]) 
       ? locationData.indiaData[formData.state] 
       : [];
 
-  // GSAP Animations
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.from(bannerTextRef.current, { y: 40, opacity: 0, duration: 1, ease: "power4.out", delay: 0.1 });
@@ -73,118 +53,199 @@ export default function PartnerRegistration() {
     return () => ctx.revert();
   }, []);
 
-  // Handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'mobile') {
       const onlyNums = value.replace(/[^0-9]/g, '');
-      setFormData({ ...formData, [name]: onlyNums });
+      setFormData(prev => ({ ...prev, [name]: onlyNums }));
     } else {
-      setFormData({ ...formData, [name]: value });
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
-    if (errors[name]) setErrors({ ...errors, [name]: null });
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
   };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setFormData({ ...formData, image: e.target.files[0] });
+      setFormData(prev => ({ ...prev, image: e.target.files[0] }));
     }
   };
 
   const handleCountryChange = (e) => {
     const val = e.target.value;
-    setFormData({ ...formData, country: val, state: '', city: '' });
-    if (errors.country) setErrors({ ...errors, country: null });
+    setFormData(prev => ({ ...prev, country: val, state: '', city: '' }));
+    if (errors.country) setErrors(prev => ({ ...prev, country: null }));
   };
 
   const handleStateChange = (e) => {
     const val = e.target.value;
-    setFormData({ ...formData, state: val, city: '' });
-    if (errors.state) setErrors({ ...errors, state: null });
+    setFormData(prev => ({ ...prev, state: val, city: '' }));
+    if (errors.state) setErrors(prev => ({ ...prev, state: null }));
   };
 
   const validateForm = () => {
-    let newErrors = {};
-    let isValid = true;
-    const requiredFields = ['firmName', 'contactName', 'email', 'mobile', 'country', 'state', 'city', 'partnerType'];
-    
-    requiredFields.forEach(field => {
-      if (!formData[field] || String(formData[field]).trim() === '') {
-        newErrors[field] = 'Required';
-        isValid = false;
-      }
-    });
+    const newErrors = {};
+    const errorList = [];
 
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email';
-      isValid = false;
+    // Firm Name
+    if (!formData.firmName.trim()) {
+      newErrors.firmName = 'Firm name is required';
+      errorList.push('Name Of Firm / Organization is mandatory');
+    } else if (formData.firmName.trim().length < 2) {
+      newErrors.firmName = 'Must be at least 2 characters';
+      errorList.push('Name Of Firm / Organization must have at least 2 characters');
+    }
+
+    // Contact Person Name
+    if (!formData.contactName.trim()) {
+      newErrors.contactName = 'Contact person name is required';
+      errorList.push('Contact Person Name is mandatory');
+    } else if (formData.contactName.trim().length < 2) {
+      newErrors.contactName = 'Must be at least 2 characters';
+      errorList.push('Contact Person Name must have at least 2 characters');
+    }
+
+    // Email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim()) {
+      newErrors.email = 'Official email is required';
+      errorList.push('Official Email Address is mandatory');
+    } else if (!emailRegex.test(formData.email.trim())) {
+      newErrors.email = 'Invalid email address';
+      errorList.push('Please enter a valid Official Email Address');
+    }
+
+    // Mobile
+    if (!formData.mobile.trim()) {
+      newErrors.mobile = 'Mobile number is required';
+      errorList.push('Mobile Number is mandatory');
+    } else if (formData.mobile.trim().length !== 10) {
+      newErrors.mobile = 'Must be a 10-digit number';
+      errorList.push('Mobile Number must be exactly 10 digits');
+    }
+
+    // Partner Type
+    if (!formData.partnerType) {
+      newErrors.partnerType = 'Partner type is required';
+      errorList.push('Partner Type / Category selection is mandatory');
+    }
+
+    // Location
+    if (!formData.country) {
+      newErrors.country = 'Country is required';
+      errorList.push('Country is mandatory');
+    }
+    if (!formData.state) {
+      newErrors.state = 'State is required';
+      errorList.push('State is mandatory');
+    }
+    if (!formData.city) {
+      newErrors.city = 'City is required';
+      errorList.push('City is mandatory');
+    }
+
+    // Optional URLs validation
+    if (formData.websiteUrl.trim()) {
+      const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i;
+      if (!urlPattern.test(formData.websiteUrl.trim())) {
+        newErrors.websiteUrl = 'Invalid website URL';
+        errorList.push('Website URL is invalid (e.g. https://yourorganization.com)');
+      }
+    }
+
+    if (formData.linkedinUrl.trim()) {
+      const urlPattern = /^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/i;
+      if (!urlPattern.test(formData.linkedinUrl.trim())) {
+        newErrors.linkedinUrl = 'Invalid LinkedIn URL';
+        errorList.push('LinkedIn URL must be a valid LinkedIn link');
+      }
     }
 
     setErrors(newErrors);
-    return isValid;
+    return { isValid: Object.keys(newErrors).length === 0, errorList };
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.bot_field !== '') return; // Honeypot trap
 
-    if (validateForm()) {
-      setIsSubmitting(true);
+    const { isValid, errorList } = validateForm();
+    if (!isValid) {
+      showError({
+        title: "Validation Error",
+        message: "Please correct the following mandatory field(s):",
+        errors: errorList
+      });
+      window.scrollTo({ top: 140, behavior: 'smooth' });
+      return;
+    }
 
-      // Extract Incubation ID securely from env variables
-      const incubationId = import.meta.env.VITE_INCUBATION_ID || "6ab39542497aa33526fcd95b";
-      const nodeEndpoint = API_URL ? `${API_URL}/partners/register` : 'https://incubationmasters.com/api/partners/register';
+    setIsSubmitting(true);
 
-      // --- 1. Payload for Node.js API (Mongoose Model with Multer) ---
-      const nodePayload = new FormData();
-      nodePayload.append('incubationId', incubationId);
-      if (formData.image) nodePayload.append('image', formData.image);
-      nodePayload.append('name', formData.contactName);
-      nodePayload.append('companyName', formData.firmName);
-      nodePayload.append('designation', formData.designation);
-      nodePayload.append('email', formData.email);
-      nodePayload.append('contactNumber', formData.mobile);
-      nodePayload.append('linkedinUrl', formData.linkedinUrl);
-      nodePayload.append('websiteUrl', formData.websiteUrl);
-      nodePayload.append('location', `${formData.city}, ${formData.state}, ${formData.country}`);
-      nodePayload.append('industry', formData.industry);
-      nodePayload.append('description', formData.description);
-      
-      // Map to Node Enum: ['Investor', 'Mentor', 'Other', 'Legal']
-      const validTypes = ['Investor', 'Mentor', 'Legal'];
-      const mappedNodePartnerType = validTypes.includes(formData.partnerType) ? formData.partnerType : 'Other';
-      nodePayload.append('partnerType', mappedNodePartnerType);
-      try {
-        const response = await fetch(nodeEndpoint, { method: 'POST', body: nodePayload });
+    const incubationId = import.meta.env.VITE_INCUBATION_ID || "6ab39542497aa33526fcd95b";
+    const nodeEndpoint = API_URL ? `${API_URL}/partners/register` : 'https://incubationmasters.com/api/partners/register';
 
-        if (response.ok) {
-          alert("Partner Registration Successful!");
-          window.location.reload();
-        } else {
-          const errData = await response.json().catch(() => ({}));
-          alert(`Failed to register: ${errData.message || "Please check your inputs."}`);
-        }
-      } catch (err) {
-        console.error("API Error:", err);
-        alert("Network error occurred.");
-      } finally {
-        setIsSubmitting(false);
+    const nodePayload = new FormData();
+    nodePayload.append('incubationId', incubationId);
+    if (formData.image) nodePayload.append('image', formData.image);
+    nodePayload.append('name', formData.contactName.trim());
+    nodePayload.append('companyName', formData.firmName.trim());
+    nodePayload.append('designation', formData.designation.trim());
+    nodePayload.append('email', formData.email.trim());
+    nodePayload.append('contactNumber', formData.mobile.trim());
+    nodePayload.append('linkedinUrl', formData.linkedinUrl.trim());
+    nodePayload.append('websiteUrl', formData.websiteUrl.trim());
+    nodePayload.append('location', `${formData.city}, ${formData.state}, ${formData.country}`);
+    nodePayload.append('industry', formData.industry.trim());
+    nodePayload.append('description', formData.description.trim());
+    
+    const validTypes = ['Investor', 'Mentor', 'Legal'];
+    const mappedNodePartnerType = validTypes.includes(formData.partnerType) ? formData.partnerType : 'Other';
+    nodePayload.append('partnerType', mappedNodePartnerType);
+
+    try {
+      const response = await fetch(nodeEndpoint, { method: 'POST', body: nodePayload });
+
+      if (response.ok) {
+        showSuccess({
+          title: "Partner Registration Successful!",
+          message: "Thank you for registering as a Partner with Gincube. Our partnerships team will review your proposal and get in touch with you shortly."
+        });
+        setFormData({
+          firmName: '', contactName: '', email: '', mobile: '',
+          designation: '', country: '', state: '', city: '',
+          partnerType: '', industry: '', linkedinUrl: '',
+          websiteUrl: '', description: '', image: null, bot_field: ''
+        });
+        setErrors({});
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        showError({
+          title: "Registration Failed",
+          message: errData.message || "Failed to register partner. Please check your inputs and try again."
+        });
       }
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      console.error("API Error:", err);
+      showError({
+        title: "Network Error",
+        message: "Network error occurred while connecting to server. Please try again."
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // UI HELPER CLASSES (Navy Blue & Yellow Theme)
-  const inputStyle = "w-full px-[16px] py-[14px] rounded-[12px] border-2 border-[#E2E8F0] focus:border-[#EA9F24] focus:ring-4 focus:ring-[#EA9F24]/15 outline-none transition-all text-[#0A2236] bg-[#F8FAFC] focus:bg-white text-[0.95rem] font-medium";
+  // UI HELPER CLASSES
+  const inputStyle = (fieldName) => `w-full px-[16px] py-[14px] rounded-[12px] border-2 ${errors[fieldName] ? 'border-[#EF4444] bg-red-50/20 focus:border-[#EF4444]' : 'border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white focus:border-[#EA9F24]'} focus:ring-4 focus:ring-[#EA9F24]/15 outline-none transition-all text-[#0A2236] text-[0.95rem] font-medium`;
   const labelStyle = "flex items-center text-[0.95rem] font-bold text-[#0A2236] mb-2";
   const sectionHeadingStyle = "text-[1.4rem] font-extrabold text-[#0A2236] mb-6 flex items-center border-b-2 border-[#F0F6FB] pb-3";
-  const errorStyle = "text-[#EF4444] text-[0.8rem] mt-1.5 font-medium";
+  const errorStyle = "text-[#EF4444] text-xs font-semibold mt-1.5 flex items-center gap-1";
 
   return (
     <main ref={pageRef} className="flex-grow bg-[#F8FAFC] min-h-screen pt-20 pb-24 font-['Inter',sans-serif]">
       
-      {/* ================= TOP BANNER (Dark Navy Theme with Yellow Glow) ================= */}
+      {/* ================= TOP BANNER ================= */}
       <div className="w-full bg-gradient-to-br from-[#0A2236] via-[#15436B] to-[#1C5A8F] pt-28 pb-20 sm:pt-32 sm:pb-24 relative overflow-hidden shadow-inner">
         <div className="absolute top-[-20%] left-[-10%] w-[40%] h-[60%] rounded-full bg-[#EA9F24]/20 blur-[120px] animate-pulse"></div>
         <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[60%] rounded-full bg-[#287BBE]/30 blur-[100px] animate-pulse" style={{ animationDelay: '1s' }}></div>
@@ -221,31 +282,31 @@ export default function PartnerRegistration() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className={labelStyle}>Name Of Firm / Organization <span className="text-[#EF4444] ml-1">*</span></label>
-                  <input type="text" name="firmName" className={`${inputStyle} ${errors.firmName ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/15' : ''}`} value={formData.firmName} onChange={handleChange} placeholder="Company / Institution Name" />
-                  {errors.firmName && <p className={errorStyle}>{errors.firmName}</p>}
+                  <input type="text" name="firmName" className={inputStyle('firmName')} value={formData.firmName} onChange={handleChange} placeholder="Company / Institution Name" />
+                  {errors.firmName && <p className={errorStyle}><AlertCircle size={13} /> {errors.firmName}</p>}
                 </div>
                 <div>
                   <label className={labelStyle}>Contact Person Name <span className="text-[#EF4444] ml-1">*</span></label>
-                  <input type="text" name="contactName" className={`${inputStyle} ${errors.contactName ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/15' : ''}`} value={formData.contactName} onChange={handleChange} placeholder="Full Name" />
-                  {errors.contactName && <p className={errorStyle}>{errors.contactName}</p>}
+                  <input type="text" name="contactName" className={inputStyle('contactName')} value={formData.contactName} onChange={handleChange} placeholder="Full Name" />
+                  {errors.contactName && <p className={errorStyle}><AlertCircle size={13} /> {errors.contactName}</p>}
                 </div>
                 <div>
                   <label className={labelStyle}><Mail className="w-4 h-4 mr-1.5 text-[#15436B]"/> Official Email <span className="text-[#EF4444] ml-1">*</span></label>
-                  <input type="email" name="email" className={`${inputStyle} ${errors.email ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/15' : ''}`} value={formData.email} onChange={handleChange} placeholder="email@organization.com" />
-                  {errors.email && <p className={errorStyle}>{errors.email}</p>}
+                  <input type="email" name="email" className={inputStyle('email')} value={formData.email} onChange={handleChange} placeholder="email@organization.com" />
+                  {errors.email && <p className={errorStyle}><AlertCircle size={13} /> {errors.email}</p>}
                 </div>
                 <div>
                   <label className={labelStyle}><Phone className="w-4 h-4 mr-1.5 text-[#15436B]"/> Mobile Number <span className="text-[#EF4444] ml-1">*</span></label>
-                  <input type="tel" name="mobile" className={`${inputStyle} ${errors.mobile ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/15' : ''}`} value={formData.mobile} onChange={handleChange} placeholder="10-digit number" maxLength="15" />
-                  {errors.mobile && <p className={errorStyle}>{errors.mobile}</p>}
+                  <input type="tel" name="mobile" className={inputStyle('mobile')} value={formData.mobile} onChange={handleChange} placeholder="10-digit number" maxLength="10" />
+                  {errors.mobile && <p className={errorStyle}><AlertCircle size={13} /> {errors.mobile}</p>}
                 </div>
                 <div>
                   <label className={labelStyle}>Designation <span className="text-[#64748B] font-normal ml-1">(Optional)</span></label>
-                  <input type="text" name="designation" className={inputStyle} value={formData.designation} onChange={handleChange} placeholder="Your Role / Title" />
+                  <input type="text" name="designation" className={inputStyle('designation')} value={formData.designation} onChange={handleChange} placeholder="Your Role / Title" />
                 </div>
                 <div>
                   <label className={labelStyle}><ImageIcon className="w-4 h-4 mr-1.5 text-[#15436B]" /> Firm Logo / Image <span className="text-[#64748B] font-normal ml-1">(Optional)</span></label>
-                  <input type="file" accept="image/*" className={`${inputStyle} bg-white py-[11px]`} onChange={handleFileChange} />
+                  <input ref={fileInputRef} type="file" accept="image/*" className={`${inputStyle('image')} bg-white py-[11px] cursor-pointer`} onChange={handleFileChange} />
                 </div>
               </div>
             </div>
@@ -261,7 +322,7 @@ export default function PartnerRegistration() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className={labelStyle}>Partner Type / Category <span className="text-[#EF4444] ml-1">*</span></label>
-                  <select name="partnerType" className={`${inputStyle} ${errors.partnerType ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/15' : ''}`} value={formData.partnerType} onChange={handleChange}>
+                  <select name="partnerType" className={inputStyle('partnerType')} value={formData.partnerType} onChange={handleChange}>
                     <option value="" disabled>Select Type</option>
                     <option value="Corporate">Corporate / Industry</option>
                     <option value="Academic Institution">Academic Institution</option>
@@ -271,23 +332,25 @@ export default function PartnerRegistration() {
                     <option value="Legal">Legal Advisor</option>
                     <option value="Other">Other</option>
                   </select>
-                  {errors.partnerType && <p className={errorStyle}>{errors.partnerType}</p>}
+                  {errors.partnerType && <p className={errorStyle}><AlertCircle size={13} /> {errors.partnerType}</p>}
                 </div>
                 <div>
                   <label className={labelStyle}>Industry / Sector <span className="text-[#64748B] font-normal ml-1">(Optional)</span></label>
-                  <input type="text" name="industry" className={inputStyle} value={formData.industry} onChange={handleChange} placeholder="e.g. EdTech, Finance, Healthcare" />
+                  <input type="text" name="industry" className={inputStyle('industry')} value={formData.industry} onChange={handleChange} placeholder="e.g. EdTech, Finance, Healthcare" />
                 </div>
                 <div>
                   <label className={labelStyle}><Globe className="w-4 h-4 mr-1.5 text-[#15436B]" /> Website URL <span className="text-[#64748B] font-normal ml-1">(Optional)</span></label>
-                  <input type="url" name="websiteUrl" className={inputStyle} value={formData.websiteUrl} onChange={handleChange} placeholder="https://..." />
+                  <input type="url" name="websiteUrl" className={inputStyle('websiteUrl')} value={formData.websiteUrl} onChange={handleChange} placeholder="https://..." />
+                  {errors.websiteUrl && <p className={errorStyle}><AlertCircle size={13} /> {errors.websiteUrl}</p>}
                 </div>
                 <div>
                   <label className={labelStyle}>LinkedIn URL <span className="text-[#64748B] font-normal ml-1">(Optional)</span></label>
-                  <input type="url" name="linkedinUrl" className={inputStyle} value={formData.linkedinUrl} onChange={handleChange} placeholder="https://linkedin.com/company/..." />
+                  <input type="url" name="linkedinUrl" className={inputStyle('linkedinUrl')} value={formData.linkedinUrl} onChange={handleChange} placeholder="https://linkedin.com/company/..." />
+                  {errors.linkedinUrl && <p className={errorStyle}><AlertCircle size={13} /> {errors.linkedinUrl}</p>}
                 </div>
                 <div className="md:col-span-2">
                   <label className={labelStyle}><FileText className="w-4 h-4 mr-1.5 text-[#15436B]" /> Partnership Proposal / Description <span className="text-[#64748B] font-normal ml-1">(Optional)</span></label>
-                  <textarea name="description" rows="3" className={`${inputStyle} resize-none min-h-[120px]`} value={formData.description} onChange={handleChange} placeholder="How would you like to collaborate with us?"></textarea>
+                  <textarea name="description" rows="3" className={`${inputStyle('description')} resize-none min-h-[120px]`} value={formData.description} onChange={handleChange} placeholder="How would you like to collaborate with us?"></textarea>
                 </div>
               </div>
             </div>
@@ -303,40 +366,40 @@ export default function PartnerRegistration() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className={labelStyle}>Country <span className="text-[#EF4444] ml-1">*</span></label>
-                  <select name="country" className={`${inputStyle} ${errors.country ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/15' : ''}`} value={formData.country} onChange={handleCountryChange}>
+                  <select name="country" className={inputStyle('country')} value={formData.country} onChange={handleCountryChange}>
                     <option value="" disabled>Select Country</option>
                     {countriesList.map((c, idx) => <option key={idx} value={c}>{c}</option>)}
                   </select>
-                  {errors.country && <p className={errorStyle}>{errors.country}</p>}
+                  {errors.country && <p className={errorStyle}><AlertCircle size={13} /> {errors.country}</p>}
                 </div>
                 <div>
                   <label className={labelStyle}>State <span className="text-[#EF4444] ml-1">*</span></label>
                   {formData.country === 'India' ? (
-                    <select name="state" className={`${inputStyle} ${errors.state ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/15' : ''}`} value={formData.state} onChange={handleStateChange}>
+                    <select name="state" className={inputStyle('state')} value={formData.state} onChange={handleStateChange}>
                       <option value="" disabled>Select State</option>
                       {indiaStates.map((s, idx) => <option key={idx} value={s}>{s}</option>)}
                     </select>
                   ) : (
-                    <input type="text" name="state" placeholder="Enter State" value={formData.state} onChange={handleChange} className={`${inputStyle} ${errors.state ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/15' : ''}`} disabled={!formData.country} />
+                    <input type="text" name="state" placeholder="Enter State" value={formData.state} onChange={handleChange} className={inputStyle('state')} disabled={!formData.country} />
                   )}
-                  {errors.state && <p className={errorStyle}>{errors.state}</p>}
+                  {errors.state && <p className={errorStyle}><AlertCircle size={13} /> {errors.state}</p>}
                 </div>
                 <div>
                   <label className={labelStyle}>City <span className="text-[#EF4444] ml-1">*</span></label>
                   {formData.country === 'India' && availableCities.length > 0 ? (
-                    <select name="city" className={`${inputStyle} ${errors.city ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/15' : ''}`} value={formData.city} onChange={handleChange}>
+                    <select name="city" className={inputStyle('city')} value={formData.city} onChange={handleChange}>
                       <option value="" disabled>Select City</option>
                       {availableCities.map((c, idx) => <option key={idx} value={c}>{c}</option>)}
                     </select>
                   ) : (
-                    <input type="text" name="city" placeholder="Enter City" value={formData.city} onChange={handleChange} className={`${inputStyle} ${errors.city ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/15' : ''}`} disabled={!formData.state} />
+                    <input type="text" name="city" placeholder="Enter City" value={formData.city} onChange={handleChange} className={inputStyle('city')} disabled={!formData.state} />
                   )}
-                  {errors.city && <p className={errorStyle}>{errors.city}</p>}
+                  {errors.city && <p className={errorStyle}><AlertCircle size={13} /> {errors.city}</p>}
                 </div>
               </div>
             </div>
 
-            {/* --- 5. SUBMIT BUTTON --- */}
+            {/* --- 4. SUBMIT BUTTON --- */}
             <div className="mt-10 text-center">
               <button 
                 type="submit" 

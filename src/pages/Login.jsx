@@ -5,9 +5,12 @@ import DASHBOARD_URL from "../common/Redirect";
 import { toast } from "react-toastify";
 import { Eye, EyeClosed, LogIn, AlertCircle, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
+import logoImage from "../assets/logo.png";
+import { usePopup } from "../context/PopupContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { showError, showSuccess } = usePopup();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -74,8 +77,17 @@ export default function Login() {
     setError("");
 
     // Ensure email and password are not empty
-    if (!email || !password) {
+    const errorList = [];
+    if (!email.trim()) errorList.push("User ID / Email is mandatory");
+    if (!password.trim()) errorList.push("Password is mandatory");
+
+    if (errorList.length > 0) {
       setError("Email and password are required");
+      showError({
+        title: "Validation Error",
+        message: "Please enter your login credentials:",
+        errors: errorList
+      });
       return;
     }
 
@@ -95,32 +107,41 @@ export default function Login() {
 
       // Handle successful response
       if (response.status === 200) {
-        toast.success("Login Successful");
+        showSuccess({
+          title: "Login Successful",
+          message: "Welcome back! Redirecting to your dashboard..."
+        });
         const encodedToken = encodeURIComponent(response.data.token);
-        window.location.href = `${DASHBOARD_URL}/dashboard?token=${encodedToken}`;
+        setTimeout(() => {
+          window.location.href = `${DASHBOARD_URL}/dashboard?token=${encodedToken}`;
+        }, 1200);
       } else {
-        toast.error(`Error: ${response.data.message || "An error occurred"}`);
+        showError({
+          title: "Authentication Failed",
+          message: response.data.message || "An error occurred. Please try again."
+        });
       }
     } catch (err) {
       // Enhanced error handling
       if (!navigator.onLine) {
-        toast.error(
-          "No internet connection. Please check your network and try again.",
-        );
-        setError(
-          "No internet connection. Please check your network and try again.",
-        );
+        showError({
+          title: "No Internet Connection",
+          message: "Please check your network connection and try again."
+        });
+        setError("No internet connection. Please check your network and try again.");
       } else if (err.response) {
-        toast.error(
-          `Error: ${err.response.data.message || "An error occurred"}`,
-        );
+        showError({
+          title: "Login Failed",
+          message: err.response.data.message || "Invalid credentials or account issue. Please try again."
+        });
         console.error("Error response:", err.response);
-        setError(
-          err.response.data.message || "An error occurred. Please try again.",
-        );
+        setError(err.response.data.message || "An error occurred. Please try again.");
       } else if (err.request) {
         // Request was made but no response received
-        toast.error("Unable to reach the server. Please try again later.");
+        showError({
+          title: "Server Unavailable",
+          message: "Unable to reach the server. Please try again later."
+        });
         setError("Unable to reach the server. Please try again later.");
       } else {
         console.error("Error:", err);
@@ -249,23 +270,10 @@ export default function Login() {
         {/* IM+ Logo (identical to screenshot) */}
         <div className="flex items-center justify-center mb-1">
           <img
-            src="https://risejhansi.in/rise_im/assets/img/logo.png"
-            alt="im+"
-            className="h-14 sm:h-16 w-auto object-contain brightness-0 invert drop-shadow-md"
-            onError={(e) => {
-              // Graceful fallback to styled im+ vector markup
-              e.currentTarget.style.display = "none";
-              const fallback = document.getElementById("im-text-fallback");
-              if (fallback) fallback.style.display = "flex";
-            }}
+            src={logoImage}
+            alt="Gincube Logo"
+            className="h-14 sm:h-16 w-auto object-contain drop-shadow-md bg-white/90 rounded-xl px-3 py-1"
           />
-          <div
-            id="im-text-fallback"
-            className="hidden items-baseline text-white select-none drop-shadow-md"
-          >
-            <span className="text-4xl sm:text-5xl font-black tracking-tight">im</span>
-            <span className="text-3xl sm:text-4xl font-light text-white/75 ml-1">+</span>
-          </div>
         </div>
 
         {/* Subtitle */}
@@ -289,30 +297,34 @@ export default function Login() {
         )}
 
         {/* Minimalist Underline Form (Same Layout) */}
-        <form onSubmit={handleLogin} id="login-form" className="w-full">
+        <form onSubmit={handleLogin} noValidate id="login-form" className="w-full">
           {/* User ID/Email */}
           <div className="relative mb-5 text-left">
+            <label htmlFor="user-email" className="block text-xs font-bold text-white/90 mb-1">
+              User ID / Email <span className="text-[#EF4444] font-bold">*</span>
+            </label>
             <input
               id="user-email"
               type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="User ID/Email"
-              className="w-full bg-transparent border-0 border-b border-white/60 focus:border-white text-white placeholder:text-white/80 py-2.5 px-0 text-sm font-normal outline-none transition-colors"
+              placeholder="Enter your User ID or Email"
+              className="w-full bg-transparent border-0 border-b border-white/60 focus:border-white text-white placeholder:text-white/60 py-2.5 px-0 text-sm font-normal outline-none transition-colors"
             />
           </div>
 
           {/* Password */}
           <div className="relative mb-4 text-left">
+            <label htmlFor="user-password" className="block text-xs font-bold text-white/90 mb-1">
+              Password <span className="text-[#EF4444] font-bold">*</span>
+            </label>
             <input
               id="user-password"
               type={isVisible ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="Password"
-              className="w-full bg-transparent border-0 border-b border-white/60 focus:border-white text-white placeholder:text-white/80 py-2.5 pr-8 pl-0 text-sm font-normal outline-none transition-colors"
+              placeholder="Enter your Password"
+              className="w-full bg-transparent border-0 border-b border-white/60 focus:border-white text-white placeholder:text-white/60 py-2.5 pr-8 pl-0 text-sm font-normal outline-none transition-colors"
             />
             <button
               type="button"

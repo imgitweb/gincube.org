@@ -1,17 +1,17 @@
-import React, { useState, useRef } from 'react';
-import { User, Mail, Phone, Lock, Building, MapPin, Target, Send, Globe } from 'lucide-react';
-
-// Apna JSON data import karein
+import React, { useState } from 'react';
+import { User, Mail, Phone, Building, MapPin, Target, Send, Globe, AlertCircle } from 'lucide-react';
 import API_URL from '../components/Config';
 import locationData from '../data/locationdata.json'; 
+import { usePopup } from '../context/PopupContext';
 
 export default function StartupRegistration() {
+    const { showError, showSuccess } = usePopup();
+
     const [formData, setFormData] = useState({
         // Founder Details
         firstName: '',
         lastName: '',
         email: '',
-        password: '',
         mobile: '',
         
         // Startup Details
@@ -31,6 +31,8 @@ export default function StartupRegistration() {
         summary: '', // Elevator Pitch
         problemStatement: ''
     });
+
+    const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Dynamic lists from JSON
@@ -48,80 +50,210 @@ export default function StartupRegistration() {
         } else {
             setFormData({ ...formData, [name]: value });
         }
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: null }));
+        }
     };
 
     const handleCountryChange = (e) => {
-        setFormData({ ...formData, country: e.target.value, state: '', city: '' });
+        const value = e.target.value;
+        setFormData({ ...formData, country: value, state: '', city: '' });
+        if (errors.country) setErrors(prev => ({ ...prev, country: null }));
     };
 
     const handleStateChange = (e) => {
-        setFormData({ ...formData, state: e.target.value, city: '' });
+        const value = e.target.value;
+        setFormData({ ...formData, state: value, city: '' });
+        if (errors.state) setErrors(prev => ({ ...prev, state: null }));
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+        const errorList = [];
+
+        // 1. Founder Details
+        if (!formData.firstName.trim()) {
+            newErrors.firstName = "First name is required";
+            errorList.push("Founder First Name is required");
+        } else if (formData.firstName.trim().length < 2) {
+            newErrors.firstName = "Must be at least 2 characters";
+            errorList.push("Founder First Name must have at least 2 characters");
+        }
+
+        if (!formData.lastName.trim()) {
+            newErrors.lastName = "Last name is required";
+            errorList.push("Founder Last Name is required");
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!formData.email.trim()) {
+            newErrors.email = "Email is required";
+            errorList.push("Founder Email Address is required");
+        } else if (!emailRegex.test(formData.email.trim())) {
+            newErrors.email = "Invalid email address";
+            errorList.push("Please enter a valid Email Address");
+        }
+
+        if (!formData.mobile.trim()) {
+            newErrors.mobile = "Mobile number is required";
+            errorList.push("Mobile Number is required");
+        } else if (formData.mobile.trim().length !== 10) {
+            newErrors.mobile = "Must be a valid 10-digit number";
+            errorList.push("Mobile Number must be exactly 10 digits");
+        }
+
+        // 2. Startup Details
+        if (!formData.startupName.trim()) {
+            newErrors.startupName = "Startup name is required";
+            errorList.push("Startup Name is required");
+        }
+
+        if (formData.website.trim()) {
+            const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
+            if (!urlPattern.test(formData.website.trim())) {
+                newErrors.website = "Invalid website URL format";
+                errorList.push("Website URL format is invalid (e.g., https://yourstartup.com)");
+            }
+        }
+
+        if (!formData.stage) {
+            newErrors.stage = "Please select startup stage";
+            errorList.push("Startup Stage selection is mandatory");
+        }
+
+        if (!formData.sectors) {
+            newErrors.sectors = "Please select industry / sector";
+            errorList.push("Industry / Sector selection is mandatory");
+        }
+
+        if (!formData.revenueStarted) {
+            newErrors.revenueStarted = "Please select revenue status";
+            errorList.push("Revenue Status selection is mandatory");
+        }
+
+        // 3. Location
+        if (!formData.country) {
+            newErrors.country = "Country is required";
+            errorList.push("Country selection is mandatory");
+        }
+
+        if (!formData.state) {
+            newErrors.state = "State is required";
+            errorList.push("State is mandatory");
+        }
+
+        if (!formData.city) {
+            newErrors.city = "City is required";
+            errorList.push("City is mandatory");
+        }
+
+        // 4. Pitches
+        if (!formData.problemStatement.trim()) {
+            newErrors.problemStatement = "Problem statement is required";
+            errorList.push("Problem Statement is mandatory");
+        } else if (formData.problemStatement.trim().length < 10) {
+            newErrors.problemStatement = "Must be at least 10 characters";
+            errorList.push("Problem Statement must contain at least 10 characters");
+        }
+
+        if (!formData.summary.trim()) {
+            newErrors.summary = "Elevator pitch / summary is required";
+            errorList.push("Product / Service (Elevator Pitch) is mandatory");
+        } else if (formData.summary.trim().length < 10) {
+            newErrors.summary = "Must be at least 10 characters";
+            errorList.push("Elevator Pitch must contain at least 10 characters");
+        }
+
+        setErrors(newErrors);
+        return { isValid: Object.keys(newErrors).length === 0, errorList };
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const { isValid, errorList } = validateForm();
+        if (!isValid) {
+            showError({
+                title: "Validation Error",
+                message: "Please correct the following mandatory field(s):",
+                errors: errorList
+            });
+            window.scrollTo({ top: 120, behavior: "smooth" });
+            return;
+        }
+
         setIsSubmitting(true);
 
-        // Required API Payload
         const payload = {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            email: formData.email,
-            password: formData.mobile,
-            startupName: formData.startupName,
+            firstName: formData.firstName.trim(),
+            lastName: formData.lastName.trim(),
+            email: formData.email.trim(),
+            password: formData.mobile.trim(),
+            startupName: formData.startupName.trim(),
             selectedPlan: "sigma", // Default
             country: formData.country,
             state: formData.state,
             city: formData.city,
             industry: formData.sectors,
             startupStage: formData.stage,
-            dpiitNo: formData.dpiit,
-            website: formData.website,
-            contactNumber: formData.mobile,
-            elevatorPitch: formData.summary,
-            problemStatement: formData.problemStatement,
+            dpiitNo: formData.dpiit.trim(),
+            website: formData.website.trim(),
+            contactNumber: formData.mobile.trim(),
+            elevatorPitch: formData.summary.trim(),
+            problemStatement: formData.problemStatement.trim(),
             revenueStarted: formData.revenueStarted === 'true',
-            incubationId: "6ab39542497aa33526fcd95b", // Target ID added here
+            incubationId: "6ab39542497aa33526fcd95b",
             currency: "INR",
             language: "English",
         };
 
         try {
             const baseApi = API_URL ? API_URL.replace(/\/incubation\/?$/, '') : 'http://localhost:5000/api';
-        const response = await fetch(`${baseApi}/startups`, {
+            const response = await fetch(`${baseApi}/startups`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
             if (response.ok) {
-                alert("Startup Data Submitted Successfully!");
+                showSuccess({
+                    title: "Startup Registered Successfully!",
+                    message: "Congratulations! Your startup profile has been submitted to Gincube. Our incubation team will review your application and contact you soon."
+                });
                 setFormData({
-                    firstName: '', lastName: '', email: '', password: '', mobile: '',
+                    firstName: '', lastName: '', email: '', mobile: '',
                     startupName: '', website: '', dpiit: '', stage: '', sectors: '', revenueStarted: 'false',
                     country: '', state: '', city: '', problemStatement: '', summary: ''
                 });
+                setErrors({});
             } else {
-                const errorData = await response.json();
-                alert(`Failed to register: ${errorData.message || "Please check your inputs."}`);
+                const errorData = await response.json().catch(() => ({}));
+                showError({
+                    title: "Registration Failed",
+                    message: errorData.message || "Failed to submit startup details. Please review your inputs and try again."
+                });
             }
         } catch (error) {
             console.error("API Error:", error);
-            alert("Network error. Could not submit form.");
+            showError({
+                title: "Network Error",
+                message: "Unable to connect to the server. Please verify your internet connection and try again."
+            });
         } finally {
             setIsSubmitting(false);
         }
     };
 
     // UI HELPER CLASSES (Navy Blue & Yellow Theme)
-    const inputStyle = "w-full px-[16px] py-[14px] rounded-[12px] border-2 border-[#E2E8F0] focus:border-[#EA9F24] focus:ring-4 focus:ring-[#EA9F24]/15 outline-none transition-all text-[#0A2236] bg-[#F8FAFC] focus:bg-white text-[0.95rem] font-medium";
+    const inputStyle = (fieldName) => `w-full px-[16px] py-[14px] rounded-[12px] border-2 ${errors[fieldName] ? 'border-[#EF4444] bg-red-50/20 focus:border-[#EF4444]' : 'border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white focus:border-[#EA9F24]'} focus:ring-4 focus:ring-[#EA9F24]/15 outline-none transition-all text-[#0A2236] text-[0.95rem] font-medium`;
     const labelStyle = "flex items-center text-[0.95rem] font-bold text-[#0A2236] mb-2";
     const sectionHeadingStyle = "text-[1.4rem] font-extrabold text-[#0A2236] mb-6 flex items-center border-b-2 border-[#F0F6FB] pb-3";
+    const errorTextStyle = "text-[#EF4444] text-xs font-semibold mt-1.5 flex items-center gap-1";
 
     return (
         <main className="min-h-screen bg-[#F8FAFC] font-['Inter',sans-serif] pb-24">
             
-            {/* ================= TOP BANNER (Dark Navy Theme with Yellow Glow) ================= */}
+            {/* ================= TOP BANNER ================= */}
             <div className="w-full bg-gradient-to-br from-[#0A2236] via-[#15436B] to-[#1C5A8F] pt-28 pb-20 sm:pt-32 sm:pb-24 relative overflow-hidden shadow-inner">
                 <div className="absolute top-[-20%] left-[-10%] w-[40%] h-[60%] rounded-full bg-[#EA9F24]/20 blur-[120px] animate-pulse"></div>
                 <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[60%] rounded-full bg-[#287BBE]/30 blur-[100px] animate-pulse" style={{ animationDelay: '1s' }}></div>
@@ -142,7 +274,7 @@ export default function StartupRegistration() {
             {/* ================= FORM CONTAINER ================= */}
             <div className="max-w-[1000px] mx-auto px-4 sm:px-6 -mt-10 sm:-mt-12 relative z-20">
                 <div className="bg-white shadow-[0_20px_60px_rgba(21,67,107,0.08)] rounded-3xl p-5 sm:p-8 md:p-12 border border-[#E2E8F0] border-t-[6px] border-t-[#EA9F24]">
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} noValidate>
                         
                         {/* --- 1. FOUNDER DETAILS --- */}
                         <div className="mb-12">
@@ -155,19 +287,23 @@ export default function StartupRegistration() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className={labelStyle}>First Name <span className="text-[#EF4444] ml-1">*</span></label>
-                                    <input type="text" required className={inputStyle} placeholder="First Name" name="firstName" value={formData.firstName} onChange={handleChange} />
+                                    <input type="text" className={inputStyle('firstName')} placeholder="First Name" name="firstName" value={formData.firstName} onChange={handleChange} />
+                                    {errors.firstName && <p className={errorTextStyle}><AlertCircle size={13} /> {errors.firstName}</p>}
                                 </div>
                                 <div>
                                     <label className={labelStyle}>Last Name <span className="text-[#EF4444] ml-1">*</span></label>
-                                    <input type="text" required className={inputStyle} placeholder="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} />
+                                    <input type="text" className={inputStyle('lastName')} placeholder="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} />
+                                    {errors.lastName && <p className={errorTextStyle}><AlertCircle size={13} /> {errors.lastName}</p>}
                                 </div>
                                 <div>
                                     <label className={labelStyle}><Mail className="w-4 h-4 mr-1.5 text-[#15436B]" /> Email Address <span className="text-[#EF4444] ml-1">*</span></label>
-                                    <input type="email" required className={inputStyle} placeholder="Founder Email" name="email" value={formData.email} onChange={handleChange} />
+                                    <input type="email" className={inputStyle('email')} placeholder="Founder Email" name="email" value={formData.email} onChange={handleChange} />
+                                    {errors.email && <p className={errorTextStyle}><AlertCircle size={13} /> {errors.email}</p>}
                                 </div>
                                 <div>
                                     <label className={labelStyle}><Phone className="w-4 h-4 mr-1.5 text-[#15436B]" /> Mobile Number <span className="text-[#EF4444] ml-1">*</span></label>
-                                    <input type="tel" required className={inputStyle} placeholder="10-digit Mobile" name="mobile" value={formData.mobile} onChange={handleChange} maxLength="15" />
+                                    <input type="tel" className={inputStyle('mobile')} placeholder="10-digit Mobile" name="mobile" value={formData.mobile} onChange={handleChange} maxLength="10" />
+                                    {errors.mobile && <p className={errorTextStyle}><AlertCircle size={13} /> {errors.mobile}</p>}
                                 </div>
                             </div>
                         </div>
@@ -183,15 +319,17 @@ export default function StartupRegistration() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className={labelStyle}>Startup Name <span className="text-[#EF4444] ml-1">*</span></label>
-                                    <input type="text" required className={inputStyle} placeholder="Your Startup Name" name="startupName" value={formData.startupName} onChange={handleChange} />
+                                    <input type="text" className={inputStyle('startupName')} placeholder="Your Startup Name" name="startupName" value={formData.startupName} onChange={handleChange} />
+                                    {errors.startupName && <p className={errorTextStyle}><AlertCircle size={13} /> {errors.startupName}</p>}
                                 </div>
                                 <div>
                                     <label className={labelStyle}><Globe className="w-4 h-4 mr-1.5 text-[#15436B]" /> Website URL <span className="text-[#64748B] font-normal ml-1">(Optional)</span></label>
-                                    <input type="url" className={inputStyle} placeholder="https://yourstartup.com" name="website" value={formData.website} onChange={handleChange} />
+                                    <input type="url" className={inputStyle('website')} placeholder="https://yourstartup.com" name="website" value={formData.website} onChange={handleChange} />
+                                    {errors.website && <p className={errorTextStyle}><AlertCircle size={13} /> {errors.website}</p>}
                                 </div>
                                 <div>
                                     <label className={labelStyle}>Startup Stage <span className="text-[#EF4444] ml-1">*</span></label>
-                                    <select name="stage" required className={inputStyle} value={formData.stage} onChange={handleChange}>
+                                    <select name="stage" className={inputStyle('stage')} value={formData.stage} onChange={handleChange}>
                                         <option value="" disabled>Select Stage</option>
                                         <option value="Ideation">Ideation</option>
                                         <option value="Validation">Validation</option>
@@ -200,10 +338,11 @@ export default function StartupRegistration() {
                                         <option value="Product-Market Fit">Product-Market Fit</option>
                                         <option value="Growth">Growth</option>
                                     </select>
+                                    {errors.stage && <p className={errorTextStyle}><AlertCircle size={13} /> {errors.stage}</p>}
                                 </div>
                                 <div>
                                     <label className={labelStyle}>Industry / Sector <span className="text-[#EF4444] ml-1">*</span></label>
-                                    <select name="sectors" required className={inputStyle} value={formData.sectors} onChange={handleChange}>
+                                    <select name="sectors" className={inputStyle('sectors')} value={formData.sectors} onChange={handleChange}>
                                         <option value="" disabled>Select Industry</option>
                                         <option value="EdTech">EdTech</option>
                                         <option value="Healthcare">Healthcare</option>
@@ -213,17 +352,19 @@ export default function StartupRegistration() {
                                         <option value="FinTech">FinTech</option>
                                         <option value="Other">Other</option>
                                     </select>
+                                    {errors.sectors && <p className={errorTextStyle}><AlertCircle size={13} /> {errors.sectors}</p>}
                                 </div>
                                 <div>
                                     <label className={labelStyle}>DPIIT Number <span className="text-[#64748B] font-normal ml-1">(Optional)</span></label>
-                                    <input type="text" className={inputStyle} placeholder="DPIIT Registration No." name="dpiit" value={formData.dpiit} onChange={handleChange} />
+                                    <input type="text" className={inputStyle('dpiit')} placeholder="DPIIT Registration No." name="dpiit" value={formData.dpiit} onChange={handleChange} />
                                 </div>
                                 <div>
                                     <label className={labelStyle}>Revenue Started? <span className="text-[#EF4444] ml-1">*</span></label>
-                                    <select name="revenueStarted" required className={inputStyle} value={formData.revenueStarted} onChange={handleChange}>
+                                    <select name="revenueStarted" className={inputStyle('revenueStarted')} value={formData.revenueStarted} onChange={handleChange}>
                                         <option value="false">No, pre-revenue</option>
                                         <option value="true">Yes, generating revenue</option>
                                     </select>
+                                    {errors.revenueStarted && <p className={errorTextStyle}><AlertCircle size={13} /> {errors.revenueStarted}</p>}
                                 </div>
                             </div>
                         </div>
@@ -239,38 +380,41 @@ export default function StartupRegistration() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
                                     <label className={labelStyle}>Country <span className="text-[#EF4444] ml-1">*</span></label>
-                                    <select name="country" required className={inputStyle} value={formData.country} onChange={handleCountryChange}>
+                                    <select name="country" className={inputStyle('country')} value={formData.country} onChange={handleCountryChange}>
                                         <option value="" disabled>Select Country</option>
                                         {countriesList.map((c, idx) => (
                                             <option key={idx} value={c}>{c}</option>
                                         ))}
                                     </select>
+                                    {errors.country && <p className={errorTextStyle}><AlertCircle size={13} /> {errors.country}</p>}
                                 </div>
                                 <div>
                                     <label className={labelStyle}>State <span className="text-[#EF4444] ml-1">*</span></label>
                                     {formData.country === 'India' ? (
-                                        <select name="state" required className={inputStyle} value={formData.state} onChange={handleStateChange}>
+                                        <select name="state" className={inputStyle('state')} value={formData.state} onChange={handleStateChange}>
                                             <option value="" disabled>Select State</option>
                                             {indiaStates.map((s, idx) => (
                                                 <option key={idx} value={s}>{s}</option>
                                             ))}
                                         </select>
                                     ) : (
-                                        <input type="text" required name="state" placeholder="Enter State" value={formData.state} onChange={handleChange} className={inputStyle} disabled={!formData.country} />
+                                        <input type="text" name="state" placeholder="Enter State" value={formData.state} onChange={handleChange} className={inputStyle('state')} disabled={!formData.country} />
                                     )}
+                                    {errors.state && <p className={errorTextStyle}><AlertCircle size={13} /> {errors.state}</p>}
                                 </div>
                                 <div>
                                     <label className={labelStyle}>City <span className="text-[#EF4444] ml-1">*</span></label>
                                     {formData.country === 'India' && availableCities.length > 0 ? (
-                                        <select name="city" required className={inputStyle} value={formData.city} onChange={handleChange}>
+                                        <select name="city" className={inputStyle('city')} value={formData.city} onChange={handleChange}>
                                             <option value="" disabled>Select City</option>
                                             {availableCities.map((c, idx) => (
                                                 <option key={idx} value={c}>{c}</option>
                                             ))}
                                         </select>
                                     ) : (
-                                        <input type="text" required name="city" placeholder="Enter City" value={formData.city} onChange={handleChange} className={inputStyle} disabled={!formData.state} />
+                                        <input type="text" name="city" placeholder="Enter City" value={formData.city} onChange={handleChange} className={inputStyle('city')} disabled={!formData.state} />
                                     )}
+                                    {errors.city && <p className={errorTextStyle}><AlertCircle size={13} /> {errors.city}</p>}
                                 </div>
                             </div>
                         </div>
@@ -286,16 +430,18 @@ export default function StartupRegistration() {
                             <div className="grid grid-cols-1 gap-6">
                                 <div>
                                     <label className={labelStyle}>Problem Statement <span className="text-[#EF4444] ml-1">*</span></label>
-                                    <textarea rows="3" required className={`${inputStyle} resize-none`} name="problemStatement" placeholder="What problem are you solving?" value={formData.problemStatement} onChange={handleChange}></textarea>
+                                    <textarea rows="3" className={`${inputStyle('problemStatement')} resize-none`} name="problemStatement" placeholder="What specific problem does your startup solve?" value={formData.problemStatement} onChange={handleChange}></textarea>
+                                    {errors.problemStatement && <p className={errorTextStyle}><AlertCircle size={13} /> {errors.problemStatement}</p>}
                                 </div>
                                 <div>
                                     <label className={labelStyle}>Product / Service (Elevator Pitch) <span className="text-[#EF4444] ml-1">*</span></label>
-                                    <textarea rows="4" required className={`${inputStyle} resize-none`} name="summary" placeholder="Describe your product/service and how it solves the problem..." value={formData.summary} onChange={handleChange}></textarea>
+                                    <textarea rows="4" className={`${inputStyle('summary')} resize-none`} name="summary" placeholder="Describe your product/service and how it solves the problem..." value={formData.summary} onChange={handleChange}></textarea>
+                                    {errors.summary && <p className={errorTextStyle}><AlertCircle size={13} /> {errors.summary}</p>}
                                 </div>
                             </div>
                         </div>
 
-                        {/* --- 6. SUBMIT --- */}
+                        {/* --- 5. SUBMIT --- */}
                         <div className="mt-10 text-center">
                             <button 
                                 type="submit" 

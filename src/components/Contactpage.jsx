@@ -2,6 +2,8 @@ import { useRef, useEffect, useState } from 'react';
 import { motion, useInView, animate } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import API_URL from "./Config"; // Added API Config
+import { AlertCircle } from 'lucide-react';
+import { usePopup } from "../context/PopupContext";
 
 // Create a motion-enabled Link component
 const MotionLink = motion(Link);
@@ -192,14 +194,18 @@ const SocialBtn = ({ icon, label, url, color, delay }) => {
    CONTACT FORM WITH INTEGRATED API
 ───────────────────────────────────────── */
 const ContactForm = () => {
+  const { showError, showSuccess } = usePopup();
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '', bot_field: '' });
+  const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [focused, setFocused] = useState(null);
 
   const fieldStyle = (field) => ({
     width: '100%', padding: '16px 20px', boxSizing: 'border-box',
-    borderRadius: 14, border: `2px solid ${focused === field ? C.accent : C.pale}`,
+    borderRadius: 14,
+    border: `2px solid ${errors[field] ? '#EF4444' : focused === field ? C.accent : C.pale}`,
+    background: errors[field] ? 'rgba(239, 68, 68, 0.04)' : focused === field ? C.white : '#F8FAFC',
     fontSize: 16, color: C.heading, background: focused === field ? C.white : '#F8FAFC',
     outline: 'none', fontFamily: 'inherit',
     boxShadow: focused === field ? `0 0 0 4px rgba(234, 159, 36, 0.15)` : 'none',
@@ -207,13 +213,61 @@ const ContactForm = () => {
   });
 
   const labelStyle = (field) => ({
-    fontSize: 14, fontWeight: 800, color: focused === field ? C.accent : C.heading,
-    display: 'block', marginBottom: 8, transition: 'color 0.3s',
+    fontSize: 14, fontWeight: 800, color: errors[field] ? "#EF4444" : focused === field ? C.accent : C.heading,
+    display: 'flex', alignItems: 'center', marginBottom: 8, transition: 'color 0.3s',
   });
+
+  const validateForm = () => {
+    const newErrors = {};
+    const errorList = [];
+
+    if (!form.name.trim()) {
+      newErrors.name = 'Your name is required';
+      errorList.push('Your Name is mandatory');
+    } else if (form.name.trim().length < 2) {
+      newErrors.name = 'Must be at least 2 characters';
+      errorList.push('Your Name must be at least 2 characters');
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!form.email.trim()) {
+      newErrors.email = 'Email address is required';
+      errorList.push('Email Address is mandatory');
+    } else if (!emailRegex.test(form.email.trim())) {
+      newErrors.email = 'Please enter a valid email address';
+      errorList.push('Please enter a valid Email Address');
+    }
+
+    if (form.phone.trim() && form.phone.trim().length !== 10) {
+      newErrors.phone = 'Mobile number must be 10 digits';
+      errorList.push('Phone Number must be a valid 10-digit number');
+    }
+
+    if (!form.message.trim()) {
+      newErrors.message = 'Message is required';
+      errorList.push('Message is mandatory');
+    } else if (form.message.trim().length < 10) {
+      newErrors.message = 'Must be at least 10 characters';
+      errorList.push('Message must contain at least 10 characters');
+    }
+
+    setErrors(newErrors);
+    return { isValid: Object.keys(newErrors).length === 0, errorList };
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.bot_field !== '') return; // Honeypot trap
+    if (form.bot_field !== '') return;
+
+    const { isValid, errorList } = validateForm();
+    if (!isValid) {
+      showError({
+        title: "Validation Error",
+        message: "Please correct the following fields:",
+        errors: errorList
+      });
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -235,14 +289,18 @@ const ContactForm = () => {
       });
 
       if (response.ok) {
+        showSuccess({
+          title: "Message Sent Successfully!",
+          message: `Thank you for reaching out, ${form.name.trim()}. Our team will get back to you shortly.`
+        });
         setSubmitted(true);
       } else {
         const errData = await response.json();
-        alert(`Failed to send message: ${errData.message || 'Please try again.'}`);
+        showError({ title: "Failed to Send Message", message: errData.message || 'Please try again.' });
       }
     } catch (error) {
       console.error("API Error:", error);
-      alert("Network Error! Please try again later.");
+      showError({ title: "Network Error", message: "Network Error! Please check your internet connection and try again." });
     } finally {
       setIsSubmitting(false);
     }
@@ -266,7 +324,7 @@ const ContactForm = () => {
         </p>
         <motion.button
           whileHover={{ y: -3, boxShadow: '0 12px 28px rgba(234, 159, 36, 0.3)' }} whileTap={{ scale: 0.96 }}
-          onClick={() => { setSubmitted(false); setForm({ name: '', email: '', phone: '', message: '', bot_field: '' }); }}
+          onClick={() => { setSubmitted(false); setForm({ name: '', email: '', phone: '', message: '', bot_field: '' }); setErrors({}); }}
           style={{ padding: '16px 32px', borderRadius: 100, border: 'none', background: `linear-gradient(90deg, ${C.accent} 0%, ${C.accentDk} 100%)`, color: C.white, fontWeight: 800, fontSize: 16, fontFamily: 'inherit', cursor: 'pointer', boxShadow: '0 8px 20px rgba(234, 159, 36, 0.2)' }}
         >
           Send Another Message
@@ -276,35 +334,39 @@ const ContactForm = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+    <form onSubmit={handleSubmit} noValidate style={{ width: '100%' }}>
       
       {/* Honeypot Input */}
       <input type="text" name="bot_field" value={form.bot_field} onChange={e => setForm(p => ({ ...p, bot_field: e.target.value }))} style={{ display: 'none' }} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20, marginBottom: 20 }}>
         <div>
-          <label style={labelStyle('name')}>Your Name *</label>
-          <input required value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+          <label style={labelStyle('name')}>Your Name <span style={{ color: '#EF4444', marginLeft: 4 }}>*</span></label>
+          <input required value={form.name} onChange={e => { setForm(p => ({ ...p, name: e.target.value })); if (errors.name) setErrors(p => ({ ...p, name: null })); }}
             placeholder="Aarav Singh" style={fieldStyle('name')} onFocus={() => setFocused('name')} onBlur={() => setFocused(null)} />
+          {errors.name && <p style={{ color: '#EF4444', fontSize: 12, fontWeight: 600, marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}><AlertCircle size={13} /> {errors.name}</p>}
         </div>
         <div>
-          <label style={labelStyle('email')}>Email Address *</label>
-          <input required type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+          <label style={labelStyle('email')}>Email Address <span style={{ color: '#EF4444', marginLeft: 4 }}>*</span></label>
+          <input required type="email" value={form.email} onChange={e => { setForm(p => ({ ...p, email: e.target.value })); if (errors.email) setErrors(p => ({ ...p, email: null })); }}
             placeholder="you@example.com" style={fieldStyle('email')} onFocus={() => setFocused('email')} onBlur={() => setFocused(null)} />
+          {errors.email && <p style={{ color: '#EF4444', fontSize: 12, fontWeight: 600, marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}><AlertCircle size={13} /> {errors.email}</p>}
         </div>
       </div>
 
       <div style={{ marginBottom: 20 }}>
-        <label style={labelStyle('phone')}>Phone Number</label>
-        <input type="tel" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value.replace(/[^0-9]/g, '') }))}
-          placeholder="9876543210" style={fieldStyle('phone')} onFocus={() => setFocused('phone')} onBlur={() => setFocused(null)} maxLength="15" />
+        <label style={labelStyle('phone')}>Phone Number <span style={{ color: '#64748B', fontWeight: 400, marginLeft: 6 }}>(Optional)</span></label>
+        <input type="tel" value={form.phone} onChange={e => { setForm(p => ({ ...p, phone: e.target.value.replace(/[^0-9]/g, '') })); if (errors.phone) setErrors(p => ({ ...p, phone: null })); }}
+          placeholder="10-digit number" style={fieldStyle('phone')} onFocus={() => setFocused('phone')} onBlur={() => setFocused(null)} maxLength="10" />
+        {errors.phone && <p style={{ color: '#EF4444', fontSize: 12, fontWeight: 600, marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}><AlertCircle size={13} /> {errors.phone}</p>}
       </div>
 
       <div style={{ marginBottom: 32 }}>
-        <label style={labelStyle('message')}>Message *</label>
-        <textarea required rows={5} value={form.message} onChange={e => setForm(p => ({ ...p, message: e.target.value }))}
+        <label style={labelStyle('message')}>Message <span style={{ color: '#EF4444', marginLeft: 4 }}>*</span></label>
+        <textarea required rows={5} value={form.message} onChange={e => { setForm(p => ({ ...p, message: e.target.value })); if (errors.message) setErrors(p => ({ ...p, message: null })); }}
           placeholder="Tell us how we can help you..." style={{ ...fieldStyle('message'), resize: 'vertical', minHeight: 140 }}
           onFocus={() => setFocused('message')} onBlur={() => setFocused(null)} />
+        {errors.message && <p style={{ color: '#EF4444', fontSize: 12, fontWeight: 600, marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}><AlertCircle size={13} /> {errors.message}</p>}
       </div>
 
       <motion.button

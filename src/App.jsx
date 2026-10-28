@@ -21,6 +21,8 @@ import NewsEvents from "./components/Newsevents"
 import Login from "./pages/Login";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { PopupProvider } from "./context/PopupContext";
+import PageTitle from "./components/PageTitle";
 
 // 👇 Import your Chatbot component here (adjust the path if needed)
 import Chatbot from "./components/Chatbot";
@@ -41,7 +43,9 @@ function App() {
   const isLoginPage = location.pathname.toLowerCase() === "/login";
 
   return (
-    <div className="flex flex-col min-h-screen bg-white text-[#334155] font-sans selection:bg-[#EA9F24] selection:text-white overflow-x-hidden">
+    <PopupProvider>
+      <PageTitle />
+      <div className="flex flex-col min-h-screen bg-white text-[#334155] font-sans selection:bg-[#EA9F24] selection:text-white overflow-x-hidden">
       {!isLoginPage && <Navbar />}
 
       {!isLoginPage && <ScrollToTop />}
@@ -73,7 +77,8 @@ function App() {
 
       {/* Footer */}
       {!isLoginPage && <Footer />}
-    </div>
+      </div>
+    </PopupProvider>
   );
 }
 

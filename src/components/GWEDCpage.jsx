@@ -1,7 +1,9 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion, useInView, animate } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import API_URL from "./Config"; // Load API URL from Config
+import API_URL from "./Config";
+import { AlertCircle } from "lucide-react";
+import { usePopup } from "../context/PopupContext";
 
 // Create a motion-enabled Link component
 const MotionLink = motion(Link);
@@ -303,11 +305,68 @@ const JoinForm = () => {
     } else {
       setForm(p => ({ ...p, [name]: value }));
     }
+    if (errors[name]) setErrors(p => ({ ...p, [name]: null }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    const errorList = [];
+
+    if (!form.name.trim()) {
+      newErrors.name = 'Your name is required';
+      errorList.push('Your Name is mandatory');
+    } else if (form.name.trim().length < 2) {
+      newErrors.name = 'Must be at least 2 characters';
+      errorList.push('Your Name must be at least 2 characters');
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!form.email.trim()) {
+      newErrors.email = 'Email ID is required';
+      errorList.push('Email ID is mandatory');
+    } else if (!emailRegex.test(form.email.trim())) {
+      newErrors.email = 'Please enter a valid email address';
+      errorList.push('Please enter a valid Email Address');
+    }
+
+    if (!form.mobile.trim()) {
+      newErrors.mobile = 'Mobile number is required';
+      errorList.push('Mobile Number is mandatory');
+    } else if (form.mobile.trim().length !== 10) {
+      newErrors.mobile = 'Must be a 10-digit number';
+      errorList.push('Mobile Number must be exactly 10 digits');
+    }
+
+    if (!form.location.trim()) {
+      newErrors.location = 'Location is required';
+      errorList.push('Location is mandatory');
+    }
+
+    if (!form.idea.trim()) {
+      newErrors.idea = 'Startup idea description is required';
+      errorList.push('Startup Idea description is mandatory');
+    } else if (form.idea.trim().length < 10) {
+      newErrors.idea = 'Must be at least 10 characters';
+      errorList.push('Startup Idea description must contain at least 10 characters');
+    }
+
+    setErrors(newErrors);
+    return { isValid: Object.keys(newErrors).length === 0, errorList };
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.bot_field !== '') return; // Honeypot trap
+    if (form.bot_field !== '') return;
+
+    const { isValid, errorList } = validateForm();
+    if (!isValid) {
+      showError({
+        title: "Validation Error",
+        message: "Please correct the following fields:",
+        errors: errorList
+      });
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -330,14 +389,18 @@ const JoinForm = () => {
       });
 
       if (response.ok) {
+        showSuccess({
+          title: "Application Submitted Successfully!",
+          message: "Thank you for applying to the GWEDC Women Entrepreneur Cell. Our team will review your application and contact you shortly."
+        });
         setSubmitted(true);
       } else {
         const errData = await response.json().catch(() => ({}));
-        alert(`Failed to submit application: ${errData.message || "Please try again."}`);
+        showError({ title: "Submission Failed", message: errData.message || "Please try again." });
       }
     } catch (err) {
       console.error("API Error:", err);
-      alert("Network Error occurred while submitting.");
+      showError({ title: "Network Error", message: "Network Error occurred while submitting. Please check your internet connection." });
     } finally {
       setIsSubmitting(false);
     }
@@ -385,41 +448,46 @@ const JoinForm = () => {
           <p style={{ color: C.muted, fontSize: 18, marginBottom: 40, lineHeight: 1.6, fontWeight: 500 }}>
             Take the first step towards your entrepreneurial journey.
           </p>
-          <form onSubmit={handleSubmit} style={{ width: '100%', position: 'relative', zIndex: 2 }}>
+          <form onSubmit={handleSubmit} noValidate style={{ width: '100%', position: 'relative', zIndex: 2 }}>
             
             <input type="text" name="bot_field" value={form.bot_field} onChange={handleChange} style={{ display: 'none' }} />
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24, marginBottom: 24 }}>
               <div>
-                <label style={labelStyle('name')}>Your Name *</label>
+                <label style={labelStyle('name')}>Your Name <span style={{ color: '#EF4444', marginLeft: 4 }}>*</span></label>
                 <input required name="name" value={form.name} onChange={handleChange}
                   placeholder="Priya Sharma" style={inputStyle('name')} onFocus={() => setFocused('name')} onBlur={() => setFocused(null)} />
+                {errors.name && <p style={{ color: '#EF4444', fontSize: 12, fontWeight: 600, marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}><AlertCircle size={13} /> {errors.name}</p>}
               </div>
               <div>
-                <label style={labelStyle('email')}>Email ID *</label>
+                <label style={labelStyle('email')}>Email ID <span style={{ color: '#EF4444', marginLeft: 4 }}>*</span></label>
                 <input required type="email" name="email" value={form.email} onChange={handleChange}
                   placeholder="priya@example.com" style={inputStyle('email')} onFocus={() => setFocused('email')} onBlur={() => setFocused(null)} />
+                {errors.email && <p style={{ color: '#EF4444', fontSize: 12, fontWeight: 600, marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}><AlertCircle size={13} /> {errors.email}</p>}
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24, marginBottom: 24 }}>
               <div>
-                <label style={labelStyle('mobile')}>Mobile No. *</label>
+                <label style={labelStyle('mobile')}>Mobile No. <span style={{ color: '#EF4444', marginLeft: 4 }}>*</span></label>
                 <input required type="tel" name="mobile" value={form.mobile} onChange={handleChange}
-                  placeholder="9876543210" style={inputStyle('mobile')} onFocus={() => setFocused('mobile')} onBlur={() => setFocused(null)} maxLength="15" />
+                  placeholder="10-digit number" style={inputStyle('mobile')} onFocus={() => setFocused('mobile')} onBlur={() => setFocused(null)} maxLength="10" />
+                {errors.mobile && <p style={{ color: '#EF4444', fontSize: 12, fontWeight: 600, marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}><AlertCircle size={13} /> {errors.mobile}</p>}
               </div>
               <div>
-                <label style={labelStyle('location')}>Location *</label>
+                <label style={labelStyle('location')}>Location <span style={{ color: '#EF4444', marginLeft: 4 }}>*</span></label>
                 <input required name="location" value={form.location} onChange={handleChange}
                   placeholder="Gwalior, MP" style={inputStyle('location')} onFocus={() => setFocused('location')} onBlur={() => setFocused(null)} />
+                {errors.location && <p style={{ color: '#EF4444', fontSize: 12, fontWeight: 600, marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}><AlertCircle size={13} /> {errors.location}</p>}
               </div>
             </div>
 
             <div style={{ marginBottom: 40 }}>
-              <label style={labelStyle('idea')}>Describe your startup idea *</label>
+              <label style={labelStyle('idea')}>Describe your startup idea <span style={{ color: '#EF4444', marginLeft: 4 }}>*</span></label>
               <textarea required rows={4} name="idea" value={form.idea} onChange={handleChange}
                 placeholder="Tell us about your business idea, the problem it solves..."
                 style={{ ...inputStyle('idea'), resize: 'vertical', minHeight: 140 }} onFocus={() => setFocused('idea')} onBlur={() => setFocused(null)} />
+              {errors.idea && <p style={{ color: '#EF4444', fontSize: 12, fontWeight: 600, marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}><AlertCircle size={13} /> {errors.idea}</p>}
             </div>
 
             <motion.button

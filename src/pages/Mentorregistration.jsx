@@ -1,36 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { User, Mail, Phone, MapPin, Send, Briefcase, Globe, FileText, Image as ImageIcon, Lock } from 'lucide-react';
-import API_URL from "../components/Config"; // Load API URL from Config
-import locationData from '../data/locationdata.json'; // Load local JSON data
+import { User, Mail, Phone, MapPin, Send, Briefcase, Globe, FileText, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import API_URL from "../components/Config";
+import locationData from '../data/locationdata.json';
+import { usePopup } from '../context/PopupContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
-/* ─────────────────────────────────────────
-   BRAND TOKENS (Premium Navy Blue & Golden Yellow Theme)
-───────────────────────────────────────── */
-const C = {
-  primary:    '#15436B', // Deep Navy Blue
-  mid:        '#1C5A8F', // Mid Blue
-  light:      '#287BBE', // Lighter Blue
-  pale:       '#E2E8F0', // Pale Slate for borders
-  lt:         '#F8FAFC', // Lightest slate for bg
-  dark:       '#0A2236', // Darkest Navy
-  darkMid:    '#0F172A', // Slate Dark
-  heading:    '#0A2236', // Crisp slate for headings
-  text:       '#334155', // Modern slate gray
-  muted:      '#64748B', // Muted text
-  accent:     '#EA9F24', // Golden Yellow
-  accentDk:   '#D68A1B', // Dark Yellow
-  bg:         '#F8FAFC', // Ultra-light modern background
-  white:      '#FFFFFF',
-};
-
 export default function MentorRegistration() {
+  const { showError, showSuccess } = usePopup();
+
   const pageRef = useRef(null);
   const bannerTextRef = useRef(null);
   const formRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -61,12 +45,10 @@ export default function MentorRegistration() {
   const countriesList = locationData?.countries || [];
   const indiaStates = locationData?.indiaData ? Object.keys(locationData.indiaData) : [];
   
-  // Get cities list if "India" and a valid state is selected
   const availableCities = (formData.country === 'India' && formData.state && locationData?.indiaData[formData.state]) 
       ? locationData.indiaData[formData.state] 
       : [];
 
-  // Available Skills/Sectors
   const availableSkills = [
     "Legal Expert", "Finance Expert", "Account Expert", "Marketing Expert", 
     "IT Expert", "Digital Marketing", "Business Strategy Expert", 
@@ -82,21 +64,21 @@ export default function MentorRegistration() {
     return () => ctx.revert();
   }, []);
 
-  // Handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'mobile' || name === 'totalExp') {
       const onlyNums = value.replace(/[^0-9]/g, '');
-      setFormData({ ...formData, [name]: onlyNums });
+      setFormData(prev => ({ ...prev, [name]: onlyNums }));
     } else {
-      setFormData({ ...formData, [name]: value });
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
-    if (errors[name]) setErrors({ ...errors, [name]: null });
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
   };
 
   const handleFileChange = (e) => {
-    if(e.target.files && e.target.files[0]) {
-        setFormData({ ...formData, image: e.target.files[0] });
+    if (e.target.files && e.target.files[0]) {
+      setFormData(prev => ({ ...prev, image: e.target.files[0] }));
+      if (errors.image) setErrors(prev => ({ ...prev, image: null }));
     }
   };
 
@@ -108,105 +90,201 @@ export default function MentorRegistration() {
 
   const handleCountryChange = (e) => {
     const val = e.target.value;
-    setFormData({ ...formData, country: val, state: '', city: '' });
-    if (errors.country) setErrors({ ...errors, country: null });
+    setFormData(prev => ({ ...prev, country: val, state: '', city: '' }));
+    if (errors.country) setErrors(prev => ({ ...prev, country: null }));
   };
 
   const handleStateChange = (e) => {
     const val = e.target.value;
-    setFormData({ ...formData, state: val, city: '' });
-    if (errors.state) setErrors({ ...errors, state: null });
+    setFormData(prev => ({ ...prev, state: val, city: '' }));
+    if (errors.state) setErrors(prev => ({ ...prev, state: null }));
   };
 
   const validateForm = () => {
-    let newErrors = {};
-    let isValid = true;
-    const requiredFields = ['name', 'email', 'mobile', 'designation', 'totalExp', 'country', 'state', 'city', 'linkedin_url', 'category', 'gender', 'institute'];
-    
-    requiredFields.forEach(field => {
-      if (!formData[field] || String(formData[field]).trim() === '') {
-        newErrors[field] = 'Required';
-        isValid = false;
-      }
-    });
+    const newErrors = {};
+    const errorList = [];
 
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email';
-      isValid = false;
+    // Full Name
+    if (!formData.name.trim()) {
+      newErrors.name = 'Full name is required';
+      errorList.push('Full Name is mandatory');
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = 'Must be at least 2 characters';
+      errorList.push('Full Name must be at least 2 characters');
     }
 
+    // Email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+      errorList.push('Email Address is mandatory');
+    } else if (!emailRegex.test(formData.email.trim())) {
+      newErrors.email = 'Invalid email address';
+      errorList.push('Please provide a valid Email Address');
+    }
+
+    // Mobile
+    if (!formData.mobile.trim()) {
+      newErrors.mobile = 'Mobile number is required';
+      errorList.push('Mobile Number is mandatory');
+    } else if (formData.mobile.trim().length !== 10) {
+      newErrors.mobile = 'Must be exactly 10 digits';
+      errorList.push('Mobile Number must be a valid 10-digit number');
+    }
+
+    // Gender
+    if (!formData.gender) {
+      newErrors.gender = 'Gender is required';
+      errorList.push('Gender selection is mandatory');
+    }
+
+    // Designation
+    if (!formData.designation.trim()) {
+      newErrors.designation = 'Current designation is required';
+      errorList.push('Current Designation is mandatory');
+    }
+
+    // Total Experience
+    if (!formData.totalExp.trim()) {
+      newErrors.totalExp = 'Total experience is required';
+      errorList.push('Total Experience (Years) is mandatory');
+    }
+
+    // Institute
+    if (!formData.institute.trim()) {
+      newErrors.institute = 'Institute or company name is required';
+      errorList.push('Institute / Company is mandatory');
+    }
+
+    // Mentor Category
+    if (!formData.category) {
+      newErrors.category = 'Category is required';
+      errorList.push('Mentor Category is mandatory');
+    }
+
+    // LinkedIn URL
+    if (!formData.linkedin_url.trim()) {
+      newErrors.linkedin_url = 'LinkedIn URL is required';
+      errorList.push('LinkedIn URL is mandatory');
+    } else {
+      const urlPattern = /^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/i;
+      if (!urlPattern.test(formData.linkedin_url.trim())) {
+        newErrors.linkedin_url = 'Please enter a valid LinkedIn profile URL';
+        errorList.push('LinkedIn URL must be a valid LinkedIn profile link');
+      }
+    }
+
+    // Profile Image
     if (!formData.image) {
       newErrors.image = 'Profile image is required';
-      isValid = false;
+      errorList.push('Profile Image upload is mandatory');
+    }
+
+    // Location
+    if (!formData.country) {
+      newErrors.country = 'Country is required';
+      errorList.push('Country is mandatory');
+    }
+    if (!formData.state) {
+      newErrors.state = 'State is required';
+      errorList.push('State is mandatory');
+    }
+    if (!formData.city) {
+      newErrors.city = 'City is required';
+      errorList.push('City is mandatory');
     }
 
     setErrors(newErrors);
-    return isValid;
+    return { isValid: Object.keys(newErrors).length === 0, errorList };
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.bot_field !== '') return; // Honeypot block
 
-    if (validateForm()) {
-      setIsSubmitting(true);
+    const { isValid, errorList } = validateForm();
+    if (!isValid) {
+      showError({
+        title: "Validation Error",
+        message: "Please correct the following mandatory field(s):",
+        errors: errorList
+      });
+      window.scrollTo({ top: 140, behavior: 'smooth' });
+      return;
+    }
 
-      const incubationId = import.meta.env.VITE_INCUBATION_ID || "6ab39542497aa33526fcd95b";
-      const nodeEndpoint = API_URL ? `${API_URL}/mentors/register` : 'https://incubationmasters.com/api/mentors/register';
+    setIsSubmitting(true);
 
-      // --- 1. Payload for Node.js API (Mongoose Model with Multer) ---
-      const nodePayload = new FormData();
-      nodePayload.append('incubationId', incubationId);
-      if(formData.image) nodePayload.append('image', formData.image);
-      nodePayload.append('name', formData.name);
-      nodePayload.append('designation', formData.designation);
-      nodePayload.append('totalExp', formData.totalExp);
-      nodePayload.append('skills', JSON.stringify(selectedSkills));
-      nodePayload.append('languages', JSON.stringify(['English', 'Hindi'])); // Defaulting for UI
-      nodePayload.append('aboutUs', formData.aboutUs || 'Mentor Profile');
-      nodePayload.append('higherEducation', formData.higherEducation || 'Graduate');
-      nodePayload.append('rating', 5); // Default rating
-      nodePayload.append('category', formData.category);
-      nodePayload.append('gender', formData.gender);
-      nodePayload.append('institute', formData.institute);
-      nodePayload.append('email', formData.email);
-      nodePayload.append('mo_number', formData.mobile);
-      nodePayload.append('country', formData.country || 'India');
-      nodePayload.append('state', formData.state); 
-      nodePayload.append('city', formData.city);
-      nodePayload.append('linkedin', formData.linkedin_url);
-      nodePayload.append('specializationIn', formData.specializationIn || 'General');
-      try {
-        const response = await fetch(nodeEndpoint, { method: 'POST', body: nodePayload });
+    const incubationId = import.meta.env.VITE_INCUBATION_ID || "6ab39542497aa33526fcd95b";
+    const nodeEndpoint = API_URL ? `${API_URL}/mentors/register` : 'https://incubationmasters.com/api/mentors/register';
 
-        if (response.ok) {
-          alert("Mentor Registration Successful!");
-          window.location.reload();
-        } else {
-          const errData = await response.json().catch(() => ({}));
-          alert(`Failed to register: ${errData.message || "Please check your inputs."}`);
-        }
-      } catch (err) {
-        console.error("API Error:", err);
-        alert("Network error. Could not connect to servers.");
-      } finally {
-        setIsSubmitting(false);
+    const nodePayload = new FormData();
+    nodePayload.append('incubationId', incubationId);
+    if (formData.image) nodePayload.append('image', formData.image);
+    nodePayload.append('name', formData.name.trim());
+    nodePayload.append('designation', formData.designation.trim());
+    nodePayload.append('totalExp', formData.totalExp.trim());
+    nodePayload.append('skills', JSON.stringify(selectedSkills));
+    nodePayload.append('languages', JSON.stringify(['English', 'Hindi']));
+    nodePayload.append('aboutUs', formData.aboutUs.trim() || 'Mentor Profile');
+    nodePayload.append('higherEducation', formData.higherEducation.trim() || 'Graduate');
+    nodePayload.append('rating', 5);
+    nodePayload.append('category', formData.category);
+    nodePayload.append('gender', formData.gender);
+    nodePayload.append('institute', formData.institute.trim());
+    nodePayload.append('email', formData.email.trim());
+    nodePayload.append('mo_number', formData.mobile.trim());
+    nodePayload.append('country', formData.country || 'India');
+    nodePayload.append('state', formData.state); 
+    nodePayload.append('city', formData.city);
+    nodePayload.append('linkedin', formData.linkedin_url.trim());
+    nodePayload.append('specializationIn', formData.specializationIn.trim() || 'General');
+
+    try {
+      const response = await fetch(nodeEndpoint, { method: 'POST', body: nodePayload });
+
+      if (response.ok) {
+        showSuccess({
+          title: "Mentor Registration Successful!",
+          message: "Thank you for registering as a mentor with Gincube. Our team will review your profile and connect with you shortly."
+        });
+        setFormData({
+          name: '', email: '', mobile: '', designation: '', totalExp: '',
+          aboutUs: '', higherEducation: '', category: 'Tech', gender: 'male',
+          institute: '', country: '', state: '', city: '', linkedin_url: '',
+          specializationIn: '', image: null, bot_field: ''
+        });
+        setSelectedSkills([]);
+        setErrors({});
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        showError({
+          title: "Registration Failed",
+          message: errData.message || "Failed to register mentor. Please check your inputs and try again."
+        });
       }
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      console.error("API Error:", err);
+      showError({
+        title: "Network Error",
+        message: "Could not connect to servers. Please check your internet connection and try again."
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // UI HELPER CLASSES (Navy Blue & Yellow Theme)
-  const inputStyle = "w-full px-[16px] py-[14px] rounded-[12px] border-2 border-[#E2E8F0] focus:border-[#EA9F24] focus:ring-4 focus:ring-[#EA9F24]/15 outline-none transition-all text-[#0A2236] bg-[#F8FAFC] focus:bg-white text-[0.95rem] font-medium";
+  // UI HELPER CLASSES
+  const inputStyle = (fieldName) => `w-full px-[16px] py-[14px] rounded-[12px] border-2 ${errors[fieldName] ? 'border-[#EF4444] bg-red-50/20 focus:border-[#EF4444]' : 'border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white focus:border-[#EA9F24]'} focus:ring-4 focus:ring-[#EA9F24]/15 outline-none transition-all text-[#0A2236] text-[0.95rem] font-medium`;
   const labelStyle = "flex items-center text-[0.95rem] font-bold text-[#0A2236] mb-2";
   const sectionHeadingStyle = "text-[1.4rem] font-extrabold text-[#0A2236] mb-6 flex items-center border-b-2 border-[#F0F6FB] pb-3";
-  const errorStyle = "text-[#EF4444] text-[0.8rem] mt-1.5 font-medium";
+  const errorStyle = "text-[#EF4444] text-xs font-semibold mt-1.5 flex items-center gap-1";
 
   return (
     <main ref={pageRef} className="flex-grow bg-[#F8FAFC] min-h-screen pt-20 pb-24 font-['Inter',sans-serif]">
       
-      {/* ================= TOP BANNER (Dark Navy Theme with Yellow Glow) ================= */}
+      {/* ================= TOP BANNER ================= */}
       <div className="w-full bg-gradient-to-br from-[#0A2236] via-[#15436B] to-[#1C5A8F] pt-28 pb-20 sm:pt-32 sm:pb-24 relative overflow-hidden shadow-inner">
         <div className="absolute top-[-20%] left-[-10%] w-[40%] h-[60%] rounded-full bg-[#EA9F24]/20 blur-[120px] animate-pulse"></div>
         <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[60%] rounded-full bg-[#287BBE]/30 blur-[100px] animate-pulse" style={{ animationDelay: '1s' }}></div>
@@ -243,26 +321,27 @@ export default function MentorRegistration() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className={labelStyle}>Full Name <span className="text-[#EF4444] ml-1">*</span></label>
-                  <input type="text" name="name" className={`${inputStyle} ${errors.name ? 'border-[#EF4444]' : ''}`} value={formData.name} onChange={handleChange} placeholder="Enter your name" />
-                  {errors.name && <p className={errorStyle}>{errors.name}</p>}
+                  <input type="text" name="name" className={inputStyle('name')} value={formData.name} onChange={handleChange} placeholder="Enter your full name" />
+                  {errors.name && <p className={errorStyle}><AlertCircle size={13} /> {errors.name}</p>}
                 </div>
                 <div>
                   <label className={labelStyle}><Mail className="w-4 h-4 mr-1.5 text-[#15436B]"/> Email <span className="text-[#EF4444] ml-1">*</span></label>
-                  <input type="email" name="email" className={`${inputStyle} ${errors.email ? 'border-[#EF4444]' : ''}`} value={formData.email} onChange={handleChange} placeholder="Email address" />
-                  {errors.email && <p className={errorStyle}>{errors.email}</p>}
+                  <input type="email" name="email" className={inputStyle('email')} value={formData.email} onChange={handleChange} placeholder="Email address" />
+                  {errors.email && <p className={errorStyle}><AlertCircle size={13} /> {errors.email}</p>}
                 </div>
                 <div>
                   <label className={labelStyle}><Phone className="w-4 h-4 mr-1.5 text-[#15436B]"/> Mobile <span className="text-[#EF4444] ml-1">*</span></label>
-                  <input type="tel" name="mobile" className={`${inputStyle} ${errors.mobile ? 'border-[#EF4444]' : ''}`} value={formData.mobile} onChange={handleChange} placeholder="10-digit number" maxLength="15" />
-                  {errors.mobile && <p className={errorStyle}>{errors.mobile}</p>}
+                  <input type="tel" name="mobile" className={inputStyle('mobile')} value={formData.mobile} onChange={handleChange} placeholder="10-digit number" maxLength="10" />
+                  {errors.mobile && <p className={errorStyle}><AlertCircle size={13} /> {errors.mobile}</p>}
                 </div>
                 <div>
                   <label className={labelStyle}>Gender <span className="text-[#EF4444] ml-1">*</span></label>
-                  <select name="gender" className={inputStyle} value={formData.gender} onChange={handleChange}>
+                  <select name="gender" className={inputStyle('gender')} value={formData.gender} onChange={handleChange}>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
                     <option value="other">Other</option>
                   </select>
+                  {errors.gender && <p className={errorStyle}><AlertCircle size={13} /> {errors.gender}</p>}
                 </div>
               </div>
             </div>
@@ -278,41 +357,42 @@ export default function MentorRegistration() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className={labelStyle}>Current Designation <span className="text-[#EF4444] ml-1">*</span></label>
-                  <input type="text" name="designation" className={`${inputStyle} ${errors.designation ? 'border-[#EF4444]' : ''}`} value={formData.designation} onChange={handleChange} placeholder="e.g. CEO, Senior Developer" />
-                  {errors.designation && <p className={errorStyle}>{errors.designation}</p>}
+                  <input type="text" name="designation" className={inputStyle('designation')} value={formData.designation} onChange={handleChange} placeholder="e.g. CEO, Senior Architect" />
+                  {errors.designation && <p className={errorStyle}><AlertCircle size={13} /> {errors.designation}</p>}
                 </div>
                 <div>
                   <label className={labelStyle}>Total Experience (Years) <span className="text-[#EF4444] ml-1">*</span></label>
-                  <input type="text" name="totalExp" className={`${inputStyle} ${errors.totalExp ? 'border-[#EF4444]' : ''}`} value={formData.totalExp} onChange={handleChange} placeholder="e.g. 10" />
-                  {errors.totalExp && <p className={errorStyle}>{errors.totalExp}</p>}
+                  <input type="text" name="totalExp" className={inputStyle('totalExp')} value={formData.totalExp} onChange={handleChange} placeholder="e.g. 10" />
+                  {errors.totalExp && <p className={errorStyle}><AlertCircle size={13} /> {errors.totalExp}</p>}
                 </div>
                 <div>
                   <label className={labelStyle}>Institute / Company <span className="text-[#EF4444] ml-1">*</span></label>
-                  <input type="text" name="institute" className={`${inputStyle} ${errors.institute ? 'border-[#EF4444]' : ''}`} value={formData.institute} onChange={handleChange} placeholder="Where do you work/teach?" />
-                  {errors.institute && <p className={errorStyle}>{errors.institute}</p>}
+                  <input type="text" name="institute" className={inputStyle('institute')} value={formData.institute} onChange={handleChange} placeholder="Where do you work/consult?" />
+                  {errors.institute && <p className={errorStyle}><AlertCircle size={13} /> {errors.institute}</p>}
                 </div>
                 <div>
                   <label className={labelStyle}>Higher Education <span className="text-[#64748B] font-normal ml-1">(Optional)</span></label>
-                  <input type="text" name="higherEducation" className={inputStyle} value={formData.higherEducation} onChange={handleChange} placeholder="e.g. MBA, Ph.D" />
+                  <input type="text" name="higherEducation" className={inputStyle('higherEducation')} value={formData.higherEducation} onChange={handleChange} placeholder="e.g. MBA, Ph.D, B.Tech" />
                 </div>
                 <div>
                   <label className={labelStyle}>Mentor Category <span className="text-[#EF4444] ml-1">*</span></label>
-                  <select name="category" className={inputStyle} value={formData.category} onChange={handleChange}>
+                  <select name="category" className={inputStyle('category')} value={formData.category} onChange={handleChange}>
                     <option value="Tech">Technical</option>
                     <option value="Non Technical">Non Technical</option>
                     <option value="Business Strategy">Business Strategy</option>
                     <option value="Funding">Funding & Finance</option>
                   </select>
+                  {errors.category && <p className={errorStyle}><AlertCircle size={13} /> {errors.category}</p>}
                 </div>
                 <div>
                   <label className={labelStyle}><Globe className="w-4 h-4 mr-1.5 text-[#15436B]" /> LinkedIn URL <span className="text-[#EF4444] ml-1">*</span></label>
-                  <input type="url" name="linkedin_url" className={`${inputStyle} ${errors.linkedin_url ? 'border-[#EF4444]' : ''}`} value={formData.linkedin_url} onChange={handleChange} placeholder="https://linkedin.com/in/..." />
-                  {errors.linkedin_url && <p className={errorStyle}>{errors.linkedin_url}</p>}
+                  <input type="url" name="linkedin_url" className={inputStyle('linkedin_url')} value={formData.linkedin_url} onChange={handleChange} placeholder="https://linkedin.com/in/..." />
+                  {errors.linkedin_url && <p className={errorStyle}><AlertCircle size={13} /> {errors.linkedin_url}</p>}
                 </div>
                 <div className="md:col-span-2">
                   <label className={labelStyle}><ImageIcon className="w-4 h-4 mr-1.5 text-[#15436B]" /> Profile Image <span className="text-[#EF4444] ml-1">*</span></label>
-                  <input type="file" accept="image/*" className={`${inputStyle} bg-white`} onChange={handleFileChange} />
-                  {errors.image && <p className={errorStyle}>{errors.image}</p>}
+                  <input ref={fileInputRef} type="file" accept="image/*" className={`${inputStyle('image')} bg-white cursor-pointer`} onChange={handleFileChange} />
+                  {errors.image && <p className={errorStyle}><AlertCircle size={13} /> {errors.image}</p>}
                 </div>
               </div>
             </div>
@@ -328,37 +408,37 @@ export default function MentorRegistration() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className={labelStyle}>Country <span className="text-[#EF4444] ml-1">*</span></label>
-                  <select name="country" className={`${inputStyle} ${errors.country ? 'border-[#EF4444]' : ''}`} value={formData.country} onChange={handleCountryChange}>
+                  <select name="country" className={inputStyle('country')} value={formData.country} onChange={handleCountryChange}>
                     <option value="" disabled>Select Country</option>
                     {countriesList.map((c, idx) => <option key={idx} value={c}>{c}</option>)}
                   </select>
-                  {errors.country && <p className={errorStyle}>{errors.country}</p>}
+                  {errors.country && <p className={errorStyle}><AlertCircle size={13} /> {errors.country}</p>}
                 </div>
 
                 <div>
                   <label className={labelStyle}>State <span className="text-[#EF4444] ml-1">*</span></label>
                   {formData.country === 'India' ? (
-                    <select name="state" className={`${inputStyle} ${errors.state ? 'border-[#EF4444]' : ''}`} value={formData.state} onChange={handleStateChange}>
+                    <select name="state" className={inputStyle('state')} value={formData.state} onChange={handleStateChange}>
                       <option value="" disabled>Select State</option>
                       {indiaStates.map((s, idx) => <option key={idx} value={s}>{s}</option>)}
                     </select>
                   ) : (
-                    <input type="text" name="state" placeholder="Enter State" value={formData.state} onChange={handleChange} className={`${inputStyle} ${errors.state ? 'border-[#EF4444]' : ''}`} disabled={!formData.country} />
+                    <input type="text" name="state" placeholder="Enter State" value={formData.state} onChange={handleChange} className={inputStyle('state')} disabled={!formData.country} />
                   )}
-                  {errors.state && <p className={errorStyle}>{errors.state}</p>}
+                  {errors.state && <p className={errorStyle}><AlertCircle size={13} /> {errors.state}</p>}
                 </div>
 
                 <div>
                   <label className={labelStyle}>City <span className="text-[#EF4444] ml-1">*</span></label>
                   {formData.country === 'India' && availableCities.length > 0 ? (
-                    <select name="city" className={`${inputStyle} ${errors.city ? 'border-[#EF4444]' : ''}`} value={formData.city} onChange={handleChange}>
+                    <select name="city" className={inputStyle('city')} value={formData.city} onChange={handleChange}>
                       <option value="" disabled>Select City</option>
                       {availableCities.map((c, idx) => <option key={idx} value={c}>{c}</option>)}
                     </select>
                   ) : (
-                    <input type="text" name="city" placeholder="Enter City" value={formData.city} onChange={handleChange} className={`${inputStyle} ${errors.city ? 'border-[#EF4444]' : ''}`} disabled={!formData.state} />
+                    <input type="text" name="city" placeholder="Enter City" value={formData.city} onChange={handleChange} className={inputStyle('city')} disabled={!formData.state} />
                   )}
-                  {errors.city && <p className={errorStyle}>{errors.city}</p>}
+                  {errors.city && <p className={errorStyle}><AlertCircle size={13} /> {errors.city}</p>}
                 </div>
               </div>
             </div>
@@ -389,14 +469,14 @@ export default function MentorRegistration() {
               <textarea 
                 name="aboutUs" 
                 rows="4" 
-                className={`${inputStyle} resize-none min-h-[120px]`} 
+                className={`${inputStyle('aboutUs')} resize-none min-h-[120px]`} 
                 value={formData.aboutUs} 
                 onChange={handleChange} 
                 placeholder="Brief bio about your mentoring experience..."
               ></textarea>
             </div>
 
-            {/* --- 6. SUBMIT BUTTON --- */}
+            {/* --- 5. SUBMIT BUTTON --- */}
             <div className="mt-10 text-center">
               <button 
                 type="submit" 
